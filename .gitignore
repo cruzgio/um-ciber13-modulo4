@@ -1,0 +1,41 @@
+# ---------------------------------------------------------------------------
+# Escenarios Killercoda — CIBER13 Módulo 4
+#
+# Killercoda publica como escenario toda carpeta de la raíz que contenga un
+# index.json. .gitignore evita que suba ruido del equipo local; NO sirve para
+# ocultar una carpeta ya versionada. Si una carpeta no debe publicarse, no la
+# subas o no le pongas index.json.
+# ---------------------------------------------------------------------------
+
+# Basura del sistema operativo
+.DS_Store
+._*
+Thumbs.db
+desktop.ini
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Pruebas locales y salidas de ejecución
+*.log
+lynis-report.dat
+lynis.log
+/tmp/
+/scratch/
+*.tar
+*.tar.gz
+*.zip
+
+# NUNCA versionar: credenciales reales, datos de estudiantes o banderas del CTFd
+.env
+*.pem
+*.key
+*.p12
+secrets*
+flags*.txt
+notas_estudiantes*
+calificaciones*

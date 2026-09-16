@@ -1,0 +1,35 @@
+{
+  "title": "Cóndor Tech · Lab 1 — Diagnóstico de línea base (CIS + Lynis)",
+  "description": "Auditas un servidor heredado de Cóndor Tech S.A.S. sin documentación. Reconocimiento, checklist CIS de 10 controles y contraste con Lynis. Módulo 4 · Universidad de Montevideo.",
+  "details": {
+    "intro": {
+      "title": "Briefing del CISO",
+      "text": "intro.md",
+      "background": "setup.sh"
+    },
+    "steps": [
+      {
+        "title": "CP1 · Reconocimiento",
+        "text": "step1/text.md",
+        "verify": "step1/verify.sh"
+      },
+      {
+        "title": "CP2 · Checklist CIS",
+        "text": "step2/text.md",
+        "verify": "step2/verify.sh"
+      },
+      {
+        "title": "CP3 · Contraste con Lynis",
+        "text": "step3/text.md",
+        "verify": "step3/verify.sh"
+      }
+    ],
+    "finish": {
+      "title": "Cierre",
+      "text": "finish.md"
+    }
+  },
+  "backend": {
+    "imageid": "ubuntu"
+  }
+}

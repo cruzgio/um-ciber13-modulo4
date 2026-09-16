@@ -21,7 +21,7 @@ autenticación, SSH permisivo y servicios innecesarios expuestos.
 Existen únicamente para practicar diagnóstico y remediación dentro de un entorno efímero y
 aislado de Killercoda, que se destruye al terminar la sesión.
 
-**No ejecutes `setup.sh` en una máquina que te importe.** No los uses como base de ninguna
+**No ejecutes `setup.sh` sobre una máquina que te importe.** No los uses como base de ninguna
 configuración real.
 
 ---
@@ -57,9 +57,12 @@ y la [documentación de creadores](https://killercoda.com/creators).
 
 ## Cómo contribuir o reutilizar
 
-Cada `git push` a la rama `main` actualiza los escenarios publicados. Antes de empujar un cambio, corre el escenario completo de punta a punta: un error en `setup.sh` se manifiesta como un laboratorio silenciosamente roto para todo el grupo.
+Cada `git push` a la rama `main` actualiza los escenarios publicados. Antes de empujar un cambio,
+corre el escenario completo de punta a punta: un error en `setup.sh` se manifiesta como un
+laboratorio silenciosamente roto para todo el grupo.
 
-Si adaptas este material para otro curso, la licencia MIT te permite hacerlo sin pedir permiso. Una mención de la fuente se agradece, no se exige.
+Si adaptas este material para otro curso, la licencia MIT te lo permite sin pedir permiso. Una
+mención de la fuente se agradece, no se exige.
 
 ## Licencia
 
