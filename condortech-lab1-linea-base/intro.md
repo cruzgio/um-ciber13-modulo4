@@ -24,4 +24,7 @@ no responde en los primeros 30 segundos, espera y reintenta.
 
 Verifica que terminó:
 
-`ls /root/.ct-setup-done`{{exec}}
+`ct-listo`{{exec}}
+
+Si responde **TODAVIA NO**, espera unos segundos y vuelve a correrlo. Si al cabo de un minuto
+sigue igual, avísale al docente.

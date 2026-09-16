@@ -35,13 +35,12 @@ Y valida:
 
 `ct-check 1`{{exec}}
 
-<details><summary>Rescate — «si te atascas, salta aquí» (bandera a mitad de puntos)</summary>
+<details><summary>Rescate — «si te atascas, salta aquí»</summary>
 
-```
-ss -tlnp | grep LISTEN
-curl -s http://localhost:2323/LEEME.txt
-echo "servicio=telnetd-legacy puerto=2323" > /root/respuestas/01.txt
-ct-check 1
-```{{exec}}
+Esto te entrega la solución del checkpoint y **lo marca como media puntuación**: `ct-check` te va
+a dar la bandera de rescate en vez de la completa. Está aquí para que nadie se quede fuera del
+objetivo de la clase, así que úsalo sin culpa si el reloj te está ganando.
+
+`ct-rescate 1`{{exec}}
 
 </details>

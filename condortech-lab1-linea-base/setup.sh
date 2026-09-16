@@ -15,8 +15,7 @@ cp /usr/bin/python3 /usr/local/bin/telnetd-legacy
 cat > /opt/condortech/legacy/LEEME.txt <<'EOF'
 Servicio de inventario heredado del proveedor SysProv Ltda. (2019).
 Nadie documentó para qué sirve. Nadie lo apagó.
-
-CT{recon_servicio_heredado_2323}
+Última modificación: 2019. Contacto: soporte@sysprov.example (rebota).
 EOF
 cd /opt/condortech/legacy && nohup /usr/local/bin/telnetd-legacy -m http.server 2323 >/dev/null 2>&1 &
 cd /root
@@ -61,7 +60,7 @@ cat > /opt/condortech/deploy/backup.conf <<'EOF'
 BACKUP_TARGET=nas01.condortech.local
 DB_USER=root
 DB_PASSWORD=C0ndor2019!
-FLAG=CT{credencial_en_archivo_world_writable}
+RETENTION_DAYS=7
 EOF
 chmod 0666 /opt/condortech/deploy/backup.conf
 
@@ -87,6 +86,75 @@ if ! apt-get install -y -qq lynis; then
   ln -sf /opt/lynis/lynis /usr/local/bin/lynis
 fi
 
+
+# --- Rescate: entrega la solucion y marca media puntuacion --------------
+cat > /usr/local/bin/ct-rescate <<'RESCATE'
+#!/bin/bash
+n="$1"
+case "$n" in 1|2|3) ;; *) echo "  Uso: ct-rescate <1|2|3>"; exit 1;; esac
+touch "/root/.ct-rescate-$n"
+echo
+echo "  RESCATE DEL CHECKPOINT $n ACTIVADO."
+echo "  Este checkpoint pasa a valer la mitad de los puntos:"
+echo "  ct-check $n te va a entregar la bandera de rescate, no la completa."
+echo
+case "$n" in
+1)
+cat <<'EOF'
+  ss -tlnp
+  curl -s http://localhost:2323/LEEME.txt
+  echo "servicio=telnetd-legacy puerto=2323" > /root/respuestas/01.txt
+  ct-check 1
+EOF
+;;
+2)
+cat <<'EOF'
+  ct-anota init
+  ct-anota 1  no_cumple "644"
+  ct-anota 2  cumple    "644"
+  ct-anota 3  no_cumple "soporte"
+  ct-anota 4  no_cumple "root y sysprov"
+  ct-anota 5  no_cumple "PermitRootLogin yes"
+  ct-anota 6  no_cumple "PermitEmptyPasswords yes"
+  ct-anota 7  no_cumple "MaxAuthTries 10"
+  ct-anota 8  no_cumple "deploy y soporte con NOPASSWD"
+  ct-anota 9  no_cumple "telnetd-legacy en 2323"
+  ct-anota 10 no_cumple "run-backup.sh en 777"
+  ct-check 2
+EOF
+;;
+3)
+cat <<'EOF'
+  lynis audit system --quick
+  find / -xdev -type f -perm -0002 -not -path '/proc/*' -not -path '/sys/*' -not -path '/tmp/*' -not -path '/run/*' 2>/dev/null
+  cat /opt/condortech/deploy/backup.conf
+  echo "/opt/condortech/deploy/backup.conf" > /root/respuestas/03.txt
+  ct-check 3
+EOF
+;;
+esac
+echo
+echo "  Copia los comandos de arriba, ejecutalos y sigue."
+echo
+RESCATE
+chmod +x /usr/local/bin/ct-rescate
+
+# --- Semaforo de arranque para el alumno --------------------------------
+cat > /usr/local/bin/ct-listo <<'LISTO'
+#!/bin/bash
+if [ -f /root/.ct-setup-done ]; then
+  echo
+  echo "  ENTORNO LISTO. El servidor app-legacy-01 esta arriba."
+  echo "  Puedes pasar al Checkpoint 1."
+  echo
+else
+  echo
+  echo "  TODAVIA NO. El entorno se esta preparando."
+  echo "  Espera unos segundos y vuelve a correr: ct-listo"
+  echo
+fi
+LISTO
+chmod +x /usr/local/bin/ct-listo
 
 # --- Libreta de la checklist CIS ---------------------------------------
 cat > /usr/local/bin/ct-anota <<'ANOTA'
@@ -147,8 +215,14 @@ chmod +x /usr/local/bin/ct-anota
 cat > /usr/local/bin/ct-check <<'CHECKER'
 #!/bin/bash
 R=/root/respuestas
-ok(){ echo; echo "  [OK] $1"; echo "  BANDERA CTFd -> $2"; echo; exit 0; }
+ok(){
+  local f="$2"
+  [ -f "/root/.ct-rescate-$CP" ] && f="${2%\}}_rescate}"
+  echo; echo "  [OK] $1"
+  [ -f "/root/.ct-rescate-$CP" ] && echo "  (usaste el rescate: bandera de media puntuacion)"
+  echo "  BANDERA CTFd -> $f"; echo; exit 0; }
 no(){ echo; echo "  [PENDIENTE] $1"; echo; exit 1; }
+CP="$1"
 
 case "$1" in
   1)
@@ -166,12 +240,27 @@ case "$1" in
     [ "$filas" -eq 10 ] || no "Tu checklist tiene $filas controles y deben ser 10. Recrea con: ct-anota init"
     pend=$(grep -c 'PENDIENTE' "$f")
     [ "$pend" -eq 0 ] || no "Quedan $pend casillas en PENDIENTE. Mira cuales con: ct-anota ver"
-    real=$(stat -c '%a' /etc/shadow)
-    sed -n '2p' "$f" | grep -q "$real" || no "La evidencia del control 01 no trae el permiso real de /etc/shadow. Corre 'stat -c %a /etc/shadow' y registra ese numero."
-    nc=$(grep -c 'no_cumple' "$f")
-    [ "$nc" -ge 6 ] || no "Solo marcaste $nc controles como no_cumple. Esta maquina esta peor de lo que parece: vuelve a correr los comandos."
-    ok "Checklist CIS completa, con veredicto y evidencia en los 10 controles." \
-       "CT{linea_base_10_controles_cis}"
+
+    # Veredicto esperado y dato que TIENE que aparecer en la evidencia.
+    # Obliga a leer la salida del comando: no basta con pegarla entera.
+    shadow_real=$(stat -c '%a' /etc/shadow)
+    passwd_real=$(stat -c '%a' /etc/passwd)
+    VER=(no_cumple cumple no_cumple no_cumple no_cumple no_cumple no_cumple no_cumple no_cumple no_cumple)
+    EVI=("$shadow_real" "$passwd_real" "soporte" "sysprov" "yes" "yes" "10" "NOPASSWD" "2323" "777")
+    malos=""
+    for i in $(seq 1 10); do
+      linea=$(sed -n "$((i+1))p" "$f")
+      v=$(echo "$linea" | cut -d';' -f2)
+      e=$(echo "$linea" | cut -d';' -f3)
+      esp_v=${VER[$((i-1))]}
+      esp_e=${EVI[$((i-1))]}
+      if [ "$v" != "$esp_v" ] || ! echo "$e" | grep -qi -- "$esp_e"; then
+        malos="$malos $i"
+      fi
+    done
+    [ -z "$malos" ] || no "Revisa estos controles:$malos. En cada uno, vuelve a correr el comando de la tabla, LEE la salida y registra el dato que la prueba. Si dice 'cumple' donde la maquina falla, tampoco cuenta."
+
+    ok "Checklist CIS completa: veredicto y evidencia correctos en los 10 controles." "CT{linea_base_10_controles_cis}"
     ;;
   3)
     f="$R/03.txt"

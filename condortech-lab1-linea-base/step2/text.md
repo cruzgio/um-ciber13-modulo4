@@ -19,57 +19,52 @@ Los 10 controles nivel 1 de esta auditoría:
 | 9 | No hay servicios de red innecesarios<br>`09_servicios_innecesarios` | `ss -tlnp` |
 | 10 | Los jobs de cron no invocan scripts world-writable<br>`10_cron_world_writable` | `cat /etc/cron.d/*; find / -xdev -perm -0002 -type f 2>/dev/null` |
 
-### La libreta: no tienes que inventar nombres ni editar archivos
+### La libreta
 
 Los 10 controles ya vienen nombrados. Crea la libreta:
 
 `ct-anota init`{{exec}}
 
-Ahora, por cada control: corres el comando, decides el veredicto y registras las tres cosas
-de un solo golpe. El primero, completo, como ejemplo:
-
-`ct-anota 1 no_cumple "$(stat -c '%a' /etc/shadow)"`{{exec}}
-
-La forma general es siempre la misma:
+Por cada control: **corres el comando de la tabla, lees la salida, y registras el dato que prueba
+tu veredicto.**
 
 ```
-ct-anota <numero_1_a_10> <cumple|no_cumple> "<salida del comando>"
+ct-anota <numero_1_a_10> <cumple|no_cumple> "<el dato que leiste>"
 ```
 
-Mira cómo vas en cualquier momento con `ct-anota ver`{{exec}}. Puedes corregir un control
-registrándolo de nuevo: se sobreescribe.
+Ejemplo del control 1. Primero corres el comando:
 
-> **El truco que te ahorra transcribir:** mete el comando de la tabla entre `$( )` y su salida
-> entra sola como evidencia. Por ejemplo, para el control 4:
-> `ct-anota 4 no_cumple "$(awk -F: '($3==0){print $1}' /etc/passwd | tr '\n' ' ')"`{{copy}}
+`stat -c '%a %U %G' /etc/shadow`{{exec}}
 
-Cuando los 10 estén registrados:
+Miras el resultado, decides si eso cumple o no, y registras **el dato**, no el comando:
+
+```
+ct-anota 1 no_cumple "644"
+```{{copy}}
+
+> **No pegues la salida completa sin leerla.** El validador comprueba, control por control, que el
+> veredicto sea el correcto y que la evidencia contenga el dato que lo demuestra. Una casilla
+> rellenada a ciegas se rechaza.
+
+`ct-anota ver`{{exec}} te muestra cómo vas. Registrar un control de nuevo lo sobreescribe.
+
+Cuando los 10 estén listos:
 
 `ct-check 2`{{exec}}
 
-El validador verifica cuatro cosas: que estén los 10, que ninguno quede en `PENDIENTE`, que la
-evidencia del control 01 traiga el permiso real de `/etc/shadow`, y que tus veredictos sean
-coherentes con el estado de la máquina.
+Si algo falla, el validador te dice **qué números revisar** — no qué poner. Vuelve a correr esos
+comandos y léelos con calma.
 
 > **Pregunta para el informe, no para la bandera:** busca en el CIS Benchmark de Ubuntu que
 > descargaste el número exacto del control que cubre los permisos de `/etc/shadow`.
-> La numeración cambia entre versiones del benchmark — por eso se cita *versión + número*, nunca el número solo.
+> La numeración cambia entre versiones — se cita *versión + número*, nunca el número solo.
 
-<details><summary>Rescate — «si te atascas, salta aquí» (bandera a mitad de puntos)</summary>
+<details><summary>Rescate — «si te atascas, salta aquí»</summary>
 
-```
-ct-anota init
-ct-anota 1  no_cumple "$(stat -c '%a' /etc/shadow)"
-ct-anota 2  cumple    "$(stat -c '%a' /etc/passwd)"
-ct-anota 3  no_cumple "$(awk -F: '($2==""){print $1}' /etc/shadow | tr '\n' ' ')"
-ct-anota 4  no_cumple "$(awk -F: '($3==0){print $1}' /etc/passwd | tr '\n' ' ')"
-ct-anota 5  no_cumple "$(grep -i permitrootlogin /etc/ssh/sshd_config)"
-ct-anota 6  no_cumple "$(grep -i permitemptypasswords /etc/ssh/sshd_config)"
-ct-anota 7  no_cumple "$(grep -i maxauthtries /etc/ssh/sshd_config)"
-ct-anota 8  no_cumple "$(grep -rh NOPASSWD /etc/sudoers.d/ | tr '\n' ' ')"
-ct-anota 9  no_cumple "telnetd-legacy:2323"
-ct-anota 10 no_cumple "/opt/condortech/deploy/run-backup.sh"
-ct-check 2
-```{{exec}}
+Esto te entrega la solución del checkpoint y **lo marca como media puntuación**: `ct-check` te va
+a dar la bandera de rescate en vez de la completa. Está aquí para que nadie se quede fuera del
+objetivo de la clase, así que úsalo sin culpa si el reloj te está ganando.
+
+`ct-rescate 2`{{exec}}
 
 </details>

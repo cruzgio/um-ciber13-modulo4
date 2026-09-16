@@ -34,14 +34,12 @@ echo "<ruta_del_archivo>" > /root/respuestas/03.txt
 Anota en tu informe: **¿qué hallazgo tuyo NO está en el reporte de Lynis, y por qué?**
 Esa diferencia es el argumento que justifica tu trabajo frente al CISO.
 
-<details><summary>Rescate — «si te atascas, salta aquí» (bandera a mitad de puntos)</summary>
+<details><summary>Rescate — «si te atascas, salta aquí»</summary>
 
-```
-lynis audit system --quick
-find / -xdev -type f -perm -0002 -not -path '/proc/*' -not -path '/sys/*' -not -path '/tmp/*' -not -path '/run/*' 2>/dev/null
-cat /opt/condortech/deploy/backup.conf
-echo "/opt/condortech/deploy/backup.conf" > /root/respuestas/03.txt
-ct-check 3
-```{{exec}}
+Esto te entrega la solución del checkpoint y **lo marca como media puntuación**: `ct-check` te va
+a dar la bandera de rescate en vez de la completa. Está aquí para que nadie se quede fuera del
+objetivo de la clase, así que úsalo sin culpa si el reloj te está ganando.
+
+`ct-rescate 3`{{exec}}
 
 </details>
