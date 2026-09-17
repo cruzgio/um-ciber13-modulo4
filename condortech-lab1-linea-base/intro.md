@@ -16,6 +16,13 @@ Cóndor Tech: el **Informe de línea base**.
 3. Si te atascas, cada paso trae un desplegable **Solución**. Usarlo vale la mitad de los puntos
    y está ahí precisamente para que nadie se quede por fuera del objetivo.
 4. Guarda tus respuestas en `/root/respuestas/`. **La máquina se borra al cerrar; tu informe no.**
+5. **Si se te acaba la hora**, recarga la pestaña y recupera tu avance con las banderas que ya
+   capturaste — no repites nada:
+
+   ```
+   ct-retomar CT{...la bandera del CP1...}
+   ct-retomar CT{...la bandera completa del CP2...}
+   ```{{copy}}
 
 ### Antes de empezar
 
