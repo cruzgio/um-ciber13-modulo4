@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Documenta una regla por su handle. Dos preguntas, siempre las mismas.
+source /opt/ct/lib.sh
+exigir_escenario
+JUST="$CT_DIR/justificaciones.txt"
+
+listar() { nftf -a list ruleset 2>/dev/null \
+  | grep -E '# handle [0-9]+$' | grep -vE '\{ # handle [0-9]+$' \
+  | sed 's/^[[:space:]]*/     /'; }
+
+if [ -z "${1:-}" ]; then
+  titulo "ct-regla · documenta una regla por su handle"
+  echo "  Uso:  ${C_B}ct-regla <handle>${C_N}"
+  echo
+  echo "  El handle es el número que imprime ${C_B}nft -a list ruleset${C_N} al final"
+  echo "  de cada regla:   ... accept ${C_B}# handle 7${C_N}"
+  echo
+  echo "  Reglas actuales de fw-borde:"
+  echo
+  listar
+  echo
+  exit 2
+fi
+
+H="$1"
+LINEA="$(nftf -a list ruleset 2>/dev/null | grep -E "# handle ${H}\$" | grep -vE '\{ # handle [0-9]+$' | head -1 | sed 's/^[[:space:]]*//')"
+[ -z "$LINEA" ] && { mal "No existe ninguna regla con handle $H."; info "Ejecuta  nft -a list ruleset  para ver los handles vigentes."; exit 1; }
+REGLA="$(echo "$LINEA" | sed 's/[[:space:]]*# handle [0-9]*$//')"
+
+titulo "Regla $H"
+echo "     $REGLA"
+echo
+echo "  Dos líneas. Las mismas dos, siempre."
+echo
+read -r -p "  1) ¿QUÉ flujo habilita o corta?  " QUE
+read -r -p "  2) ¿QUÉ pasaría en Cóndor Tech si no estuviera?  " PORQUE
+[ -z "$QUE" ] && QUE="(sin completar)"
+[ -z "$PORQUE" ] && PORQUE="(sin completar)"
+
+{ echo ""; echo "# handle $H · $REGLA"; echo "#   flujo  : $QUE"; echo "#   si no  : $PORQUE"; } >> "$JUST"
+ok "Anotado. Llevas $(grep -c '^# handle' "$JUST") regla(s) documentada(s)."
+info "ct-informe las vuelca al procedimiento del Runbook."

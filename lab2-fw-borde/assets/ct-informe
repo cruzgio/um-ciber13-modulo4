@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# Genera el artefacto del Runbook: la política de fw-borde documentada.
+source /opt/ct/lib.sh
+exigir_escenario
+SALIDA=/root/politica-fw-borde-condor.md
+{
+echo "# Política de fw-borde · Cóndor Tech S.A.S."
+echo
+echo "**Generado:** $(date -u '+%Y-%m-%d %H:%M UTC') · **Equipo:** _(completar)_ · **Integrantes:** _(completar)_"
+echo
+echo "> Estándar de calidad: otro equipo debe poder aplicar esta política en un"
+echo "> firewall limpio sin preguntar nada."
+echo
+echo "## 1. Tabla de flujos"
+echo
+echo "| Nº | Origen | Destino | Servicio | Acción | Justificación de negocio |"
+echo "|---|---|---|---|---|---|"
+echo "| 10 | internet | tienda-01 (dmz) | tcp/443 | PERMITIR | la tienda es pública |"
+echo "| 20 | tienda-01 (dmz) | erp-prod (interna) | tcp/1433 | PERMITIR | la tienda consulta stock y precios |"
+echo "| 30 | _(completar)_ | | | | |"
+echo "| 90 | cualquiera | cualquiera | cualquiera | DENEGAR Y REGISTRAR | lo que no está escrito, no pasa |"
+echo
+echo "## 2. Ruleset como código"
+echo
+echo '```'
+cat "$RULESET" 2>/dev/null || nftf list ruleset
+echo '```'
+echo
+echo "## 3. Justificación por regla"
+echo
+if [ -s "$CT_DIR/justificaciones.txt" ]; then
+  echo '```'; cat "$CT_DIR/justificaciones.txt"; echo '```'
+else
+  echo "_(Sin anotaciones. Usa \`ct-regla <handle>\` sobre cada renglón.)_"
+fi
+echo
+echo "## 4. Aplicación"
+echo
+echo '```bash'
+echo "nft -c -f fw-borde.nft     # comprobar la sintaxis sin aplicar"
+echo "nft -f fw-borde.nft        # aplicar"
+echo "nft -a list ruleset        # verificar, con handles y contadores"
+echo '```'
+echo
+echo "## 5. Verificación"
+echo
+echo "| Flujo | Esperado |"
+echo "|---|---|"
+echo "| internet → tienda-01 :443 | pasa |"
+echo "| tienda-01 → erp-prod :1433 | pasa |"
+echo "| usuarios → erp-prod :1433 | pasa |"
+echo "| tienda-01 → erp-prod :445 | cae y queda registrado |"
+echo "| internet → erp-prod :1433 | cae y queda registrado |"
+echo "| usuarios → internet :443 | pasa |"
+echo
+echo "Comprobable con \`ct-probar <origen> <destino> <puerto>\`."
+echo
+echo "Estado en esta sesión:"
+for c in A Afull B Bfull; do
+  if hecho $c; then echo "- $c: superado"; else echo "- $c: pendiente"; fi
+done
+echo
+echo "## 6. Reversión"
+echo
+echo '```bash'
+echo "nft flush ruleset          # deja el firewall sin filtrado (solo para depurar)"
+echo "nft -f fw-borde.nft        # volver al estado documentado"
+echo '```'
+echo
+echo "## 7. Qué NO cubre"
+echo
+echo "_(Alcance honesto: esto filtra el tráfico que cruza entre zonas de la Zona A."
+echo "La Zona B se filtra con grupos de seguridad del proveedor de nube. Clase 10.)_"
+} > "$SALIDA"
+titulo "Informe generado"
+ok "$SALIDA"
+info "Complétalo donde dice _(completar)_ y súbelo al Runbook."

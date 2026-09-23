@@ -1,0 +1,43 @@
+#!/usr/sbin/nft -f
+# ─────────────────────────────────────────────────────────────────────────
+# fw-borde · Cóndor Tech S.A.S.
+# Estado al 23-sep-2026: los renglones que la clase escribió el lunes.
+#
+#  Nº  ORIGEN            DESTINO            SERVICIO   ACCIÓN     JUSTIFICACIÓN
+#  10  internet          tienda-01 (dmz)    tcp/443    PERMITIR   la tienda es pública: 92% de la facturación
+#  20  tienda-01 (dmz)   erp-prod (interna) tcp/1433   PERMITIR   la tienda consulta stock y precios en el ERP
+#  90  cualquiera        cualquiera         cualquiera DENEGAR    lo que no está escrito, no pasa
+#
+# Se numera de diez en diez para poder intercalar sin renumerar todo.
+# ─────────────────────────────────────────────────────────────────────────
+
+table inet borde
+delete table inet borde
+
+table inet borde {
+
+    chain forward {
+        type filter hook forward priority 0; policy drop;   # 90 · denegar por defecto
+
+        # Cimientos: deja volver la respuesta de una conversación ya aceptada.
+        # No es un renglón de la política: es infraestructura.
+        ct state established,related accept
+        ct state invalid drop
+
+        # 10 · internet → tienda-01 :443
+        ip saddr 203.0.113.0/24 ip daddr 192.168.10.10 tcp dport 443 accept
+
+        # 20 · tienda-01 → erp-prod :1433
+        ip saddr 192.168.10.10 ip daddr 192.168.20.10 tcp dport 1433 accept
+
+        # ── A PARTIR DE AQUÍ ESCRIBEN USTEDES ───────────────────────────
+        # 30 ·
+        # 40 ·
+        # 50 ·
+
+        # ── BLOQUE B · registro de denegados ────────────────────────────
+    }
+
+    chain input  { type filter hook input  priority 0; policy accept; }
+    chain output { type filter hook output priority 0; policy accept; }
+}

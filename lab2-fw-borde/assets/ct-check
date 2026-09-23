@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+# El auditor externo.  ct-check A | B
+source /opt/ct/lib.sh
+exigir_escenario
+
+if [ "${CT_SILENCIO:-0}" = "1" ]; then marcar() { :; }; bandera() { :; }; fi
+
+case "${1:-}" in
+# ═══════════════════════════════════════════════════════ BLOQUE A
+A|a)
+  titulo "ct-check A · La política del equipo en fw-borde"
+  echo "  Seis flujos. Los cuatro primeros son el ${C_B}mínimo aceptable${C_N}."
+  echo "  Los seis completos son el ${C_B}nivel completo${C_N}."
+  echo
+  min_f=0; full_f=0; n=0
+
+  evaluar() { # etiqueta, origen, destino, puerto, esperado, nivel
+    n=$((n+1))
+    if flujo "$2" "$3" "$4"; then real=pasa; else real=cae; fi
+    if [ "$real" = "$5" ]; then
+      ok "Flujo $n · $1 → $real"
+    else
+      mal "Flujo $n · $1 → ${C_B}$real${C_N}, se esperaba ${C_B}$5${C_N}"
+      [ "$6" = "min" ] && min_f=$((min_f+1))
+      full_f=$((full_f+1))
+    fi
+  }
+
+  echo "  ${C_B}Mínimo aceptable${C_N}"
+  evaluar "internet → tienda-01 :443   (renglón 10, ya estaba)"  internet tienda   443  pasa min
+  evaluar "tienda-01 → erp-prod :1433  (renglón 20, ya estaba)"  tienda   erp      1433 pasa min
+  evaluar "usuarios → erp-prod :1433   (lo escriben hoy)"        usuarios erp      1433 pasa min
+  evaluar "tienda-01 → erp-prod :445   (SMB cruzando la DMZ)"    tienda   erp      445  cae  min
+  echo
+  echo "  ${C_B}Nivel completo${C_N}"
+  evaluar "internet → erp-prod :1433   (nadie entra al ERP)"     internet erp      1433 cae  full
+  evaluar "usuarios → internet :443    (salida web del personal)" usuarios internet 443  pasa full
+
+  echo
+  if [ $full_f -eq 0 ]; then
+    echo "  ${C_OK}${C_B}NIVEL COMPLETO — 6 de 6.${C_N} Tu política hace exactamente lo que dice."
+    marcar A; marcar Afull
+    if hecho rescateA; then bandera "$CT_FLAG_A_RESCATE"; else bandera "$CT_FLAG_A_FULL"; fi
+  elif [ $min_f -eq 0 ]; then
+    echo "  ${C_OK}${C_B}MÍNIMO ACEPTABLE — 4 de 4.${C_N} Puedes seguir al bloque B con esta bandera."
+    info "Te faltan $full_f flujo(s) para el nivel completo. Puedes volver a ellos cuando quieras."
+    marcar A
+    if hecho rescateA; then bandera "$CT_FLAG_A_RESCATE"; else bandera "$CT_FLAG_A_MIN"; fi
+  else
+    echo "  ${C_MAL}TODAVÍA NO${C_N} — faltan $min_f flujo(s) del mínimo."
+    info "Si el flujo 4 PASA, no tienes una regla de más: tienes una regla de menos arriba que acepta de sobra."
+    info "Si el flujo 3 CAE, todavía no escribiste el renglón de usuarios hacia el ERP."
+    info "¿Atascado? ct-rescate A (media bandera, y te deja seguir)."
+    exit 1
+  fi
+  ;;
+
+# ═══════════════════════════════════════════════════════ BLOQUE B
+B|b)
+  titulo "ct-check B · Lo que se deniega, se registra"
+  if ! hecho A; then
+    mal "El bloque B arranca desde el bloque A."
+    info "Pega tu bandera del bloque A:  ct-retomar 'CT{...}'"
+    exit 1
+  fi
+
+  ANTES="$(nftf -j list ruleset 2>/dev/null)"
+  PREF="$(python3 /opt/ct/registro.py prefijos <<<"$ANTES")"
+  if [ -z "$PREF" ]; then
+    mal "No hay ninguna regla de registro en la cadena forward."
+    info 'Necesitas una línea con:  log prefix "CT-DENY " counter'
+    info "Va al final de la cadena, ANTES de que actúe la política por defecto."
+    exit 1
+  fi
+  ok "Reglas de registro encontradas: $(echo "$PREF" | tr '\n' ' ')"
+
+  # Mínimo: un flujo denegado por política deja rastro
+  flujo internet erp 1433 >/dev/null 2>&1
+  sleep 1
+  P1="$(nftf -j list ruleset | python3 /opt/ct/registro.py disparado "$ANTES")"
+  if [ -n "$P1" ]; then
+    ok "El intento internet → erp-prod :1433 quedó registrado como: ${C_B}${P1}${C_N}"
+  else
+    mal "Ese intento se denegó pero no dejó rastro en ninguna regla de registro."
+    info "Comprueba que la regla de log esté ANTES del final y que lleve 'counter'."
+    exit 1
+  fi
+
+  MEDIO="$(nftf -j list ruleset 2>/dev/null)"
+  flujo tienda erp 445 >/dev/null 2>&1
+  sleep 1
+  P2="$(nftf -j list ruleset | python3 /opt/ct/registro.py disparado "$MEDIO")"
+
+  echo
+  if [ -n "$P2" ] && [ "$P2" != "$P1" ]; then
+    ok "El intento tienda-01 → erp-prod :445 quedó registrado como: ${C_B}${P2}${C_N}"
+    echo
+    echo "  ${C_OK}${C_B}NIVEL COMPLETO.${C_N} Tu log no dice solo «algo se cayó»: dice ${C_B}qué regla lo tiró${C_N}."
+    marcar B; marcar Bfull
+    if hecho rescateB; then bandera "$CT_FLAG_B_RESCATE"; else bandera "$CT_FLAG_B_FULL"; fi
+  else
+    echo "  ${C_OK}${C_B}MÍNIMO ACEPTABLE.${C_N} Lo que se deniega deja rastro."
+    info "Para el nivel completo: dale a la denegación explícita de SMB su PROPIO prefijo,"
+    info "distinto del de la denegación por defecto. Así el log te dice qué regla disparó."
+    marcar B
+    if hecho rescateB; then bandera "$CT_FLAG_B_RESCATE"; else bandera "$CT_FLAG_B_MIN"; fi
+  fi
+  ;;
+
+*)
+  cat <<TXT
+
+  Uso: ${C_B}ct-check A${C_N}   ·  la política del equipo cruzando fw-borde
+       ${C_B}ct-check B${C_N}   ·  el registro de denegados
+
+TXT
+  exit 2 ;;
+esac

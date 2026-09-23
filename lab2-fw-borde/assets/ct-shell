@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Entra a fw-borde, el firewall perimetral de Cóndor Tech.
+source /opt/ct/lib.sh
+exigir_escenario
+cat <<TXT
+
+  Estás dentro de ${C_B}fw-borde${C_N}. Aquí nft configura el firewall que separa
+  las zonas de Cóndor Tech. Tu terminal no pasa por él: bloquearte es imposible.
+
+  Tu archivo:        ${C_B}${RULESET}${C_N}
+  Comprobar:         ${C_B}nft -c -f ${RULESET}${C_N}
+  Aplicar:           ${C_B}nft -f ${RULESET}${C_N}
+  Ver con handles:   ${C_B}nft -a list ruleset${C_N}
+  Probar un flujo:   ${C_B}ct-probar usuarios erp 1433${C_N}
+
+  Para volver:  ${C_B}exit${C_N}
+
+TXT
+exec ip netns exec fwborde bash --rcfile <(echo 'PS1="\[\e[1;34m\]fw-borde\[\e[0m\]:\w# "')

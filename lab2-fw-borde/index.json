@@ -1,0 +1,16 @@
+{
+  "title": "Cóndor Tech · Lab 2 — La política de fw-borde en nftables",
+  "description": "Traduce a nftables la tabla de flujos entre zonas que tu célula diseñó, verifícala con un auditor externo y haz que lo denegado deje rastro. Módulo 4 · CIBER13 · Universidad de Montevideo.",
+  "details": {
+    "intro": { "text": "intro.md", "background": "background.sh", "foreground": "foreground.sh" },
+    "steps": [
+      { "title": "Bloque A · Lo que ya está y lo que falta", "text": "step1.md" },
+      { "title": "Bloque A · Escribe tus renglones", "text": "step2.md" },
+      { "title": "Bloque B · Lo denegado deja rastro", "text": "step3.md" }
+    ],
+    "finish": { "text": "finish.md" },
+    "assets": { "host01": [ { "file": "*", "target": "/opt/ct", "chmod": "+x" } ] }
+  },
+  "backend": { "imageid": "ubuntu" },
+  "interface": { "layout": "ide" }
+}

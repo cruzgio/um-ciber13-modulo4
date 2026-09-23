@@ -1,0 +1,30 @@
+#!/usr/sbin/nft -f
+# fw-borde · referencia del BLOQUE A (nivel completo)
+table inet borde
+delete table inet borde
+
+table inet borde {
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+
+        ct state established,related accept
+        ct state invalid drop
+
+        # 10 · internet → tienda-01 :443   la tienda es pública
+        ip saddr 203.0.113.0/24 ip daddr 192.168.10.10 tcp dport 443 accept
+
+        # 20 · tienda-01 → erp-prod :1433  la tienda consulta stock y precios
+        ip saddr 192.168.10.10 ip daddr 192.168.20.10 tcp dport 1433 accept
+
+        # 30 · usuarios → erp-prod :1433   contabilidad factura en el ERP
+        ip saddr 192.168.30.0/24 ip daddr 192.168.20.10 tcp dport 1433 accept
+
+        # 40 · usuarios → internet :443    salida web del personal
+        ip saddr 192.168.30.0/24 ip daddr 203.0.113.0/24 tcp dport 443 accept
+
+        # 50 · tienda-01 → erp-prod :445   SMB no cruza la frontera de la DMZ
+        ip saddr 192.168.10.0/24 ip daddr 192.168.20.0/24 tcp dport 445 drop
+    }
+    chain input  { type filter hook input  priority 0; policy accept; }
+    chain output { type filter hook output priority 0; policy accept; }
+}

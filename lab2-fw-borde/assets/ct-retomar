@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Entra al bloque B con el bloque A ya construido. Nadie repite pasos.
+source /opt/ct/lib.sh
+exigir_escenario
+BAND="${1:-}"
+if [ -z "$BAND" ]; then
+  titulo "ct-retomar · empieza el bloque B sin repetir el A"
+  cat <<TXT
+  Pega la bandera que capturaste en el bloque A:
+
+     ${C_B}ct-retomar 'CT{...}'${C_N}
+
+  Sirve tanto la del mínimo aceptable como la del nivel completo.
+  Deja fw-borde con la política del bloque A ya cargada y habilita el bloque B.
+
+TXT
+  exit 2
+fi
+case "$BAND" in
+  "$CT_FLAG_A_FULL")
+     REF="$CT_DIR/ref-bloqueA.nft"; ETQ="nivel completo del bloque A" ;;
+  "$CT_FLAG_A_MIN"|"$CT_FLAG_A_RESCATE")
+     REF="$CT_DIR/ref-bloqueA.nft"; ETQ="mínimo aceptable del bloque A" ;;
+  "$CT_FLAG_B_MIN"|"$CT_FLAG_B_FULL"|"$CT_FLAG_B_RESCATE")
+     REF="$CT_DIR/ref-bloqueB.nft"; ETQ="bloque B" ;;
+  *) mal "Esa bandera no la reconozco."; info "Cópiala completa, con las llaves: CT{...}"; exit 1 ;;
+esac
+titulo "Bandera reconocida · $ETQ"
+cp "$REF" "$RULESET"
+if nftf -f "$RULESET"; then
+  ok "fw-borde restaurado. Tu archivo de trabajo está en $RULESET."
+  marcar A
+  echo
+  info "Sigue en el ${C_B}bloque B${C_N}: que lo denegado deje rastro."
+  info "Si tenías tu propio archivo guardado fuera, cópialo encima de $RULESET."
+else
+  mal "No pude aplicar el ruleset de referencia."; exit 1
+fi

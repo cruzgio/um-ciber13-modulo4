@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Ruleset de referencia del bloque. Vale media bandera y te deja seguir.
+source /opt/ct/lib.sh
+exigir_escenario
+BL="${1:-}"
+case "$BL" in
+  A|a) REF="$CT_DIR/ref-bloqueA.nft"; BL=A ;;
+  B|b) REF="$CT_DIR/ref-bloqueB.nft"; BL=B ;;
+  *) echo "  Uso: ${C_B}ct-rescate A|B${C_N}"; exit 2 ;;
+esac
+titulo "Rescate · Bloque $BL — referencia"
+echo "  ${C_NOTA}Usarlo vale media bandera. Media bandera vale más que veinte minutos"
+echo "  trabado — pero léelo, no lo copies a ciegas.${C_N}"
+echo
+sed 's/^/     /' "$REF"
+echo
+read -r -p "  ¿Lo aplico ahora en fw-borde? [s/N] " RESP
+marcar "rescate$BL"
+if [ "$RESP" = "s" ] || [ "$RESP" = "S" ]; then
+  cp "$REF" "$RULESET"
+  if nftf -f "$RULESET"; then ok "Aplicado y copiado a $RULESET."
+  else mal "No se pudo aplicar. Revisa la salida."; exit 1; fi
+else
+  info "No lo apliqué. Queda marcado como consultado."
+fi
