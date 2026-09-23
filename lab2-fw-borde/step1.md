@@ -10,6 +10,8 @@ ct-mapa
 
 Cuatro zonas alrededor de **fw-borde**. Todo lo que cruza de una zona a otra pasa por la cadena `forward` del firewall: eso es lo que vas a escribir.
 
+**Las zonas ya están montadas: nadie las crea ni las modifica.** Lo único que escribes son los renglones que cruzan entre ellas.
+
 Entra al firewall:
 
 ```
