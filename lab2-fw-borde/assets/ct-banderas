@@ -9,7 +9,7 @@ if [ ! -s "$MIS" ]; then
 fi
 while IFS=$'\t' read -r reto flag; do
   [ -z "$flag" ] && continue
-  echo "  ${C_NOTA}${reto}${C_N}"
+  echo "  ${C_NOTA}categoría «${CT_CATEGORIA}» → reto «${C_B}${reto}${C_N}»"
   echo "     ${C_B}${flag}${C_N}"
   echo
 done < "$MIS"

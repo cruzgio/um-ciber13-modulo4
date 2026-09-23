@@ -2,14 +2,14 @@
 
 ## Lo que capturaste
 
-| Reto de CTFd | Qué demuestra |
+| Reto (categoría **Lab 2**) | Qué demuestra |
 |---|---|
-| Bloque A — mínimo aceptable | Los cuatro flujos que Cóndor Tech no puede no tener |
-| Bloque A — nivel completo | Los seis, incluida la salida del personal |
-| Bloque B — mínimo aceptable | Lo denegado deja rastro |
-| Bloque B — nivel completo | El log dice **qué regla** lo tiró |
+| **A Mínimo** | Los cuatro flujos que Cóndor Tech no puede no tener |
+| **A Completo** | Los seis, incluida la salida del personal |
+| **B Mínimo** | Lo denegado deja rastro |
+| **B Completo** | El log dice **qué regla** lo tiró |
 
-Cada bandera va al reto que lleva ese mismo nombre. Si usaste `ct-rescate`, la tuya va al reto «con rescate» del bloque correspondiente.
+Cada bandera va al reto que lleva ese mismo nombre. Si usaste `ct-rescate`, la tuya va a **A Rescate** o **B Rescate**.
 
 **Antes de cerrar la sesión:** `ct-banderas` te las muestra todas otra vez.
 

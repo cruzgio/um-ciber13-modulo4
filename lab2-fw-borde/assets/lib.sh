@@ -46,7 +46,7 @@ MIS="$CT_DIR/mis-banderas.txt"
 bandera() {
   echo
   echo "  ${C_OK}${C_B}BANDERA${C_N}   ${C_B}$1${C_N}"
-  echo "  ${C_NOTA}Reto de CTFd:${C_N} $2"
+  echo "  ${C_NOTA}En CTFd:${C_N} categoría «${CT_CATEGORIA}» → reto «${C_B}$2${C_N}»"
   echo
   grep -qF "$1" "$MIS" 2>/dev/null || printf '%s\t%s\n' "$2" "$1" >> "$MIS"
 }

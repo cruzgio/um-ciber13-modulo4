@@ -179,16 +179,18 @@ Atajo: si no quieres teclear los renglones, `ct-rescate A` y `ct-rescate B` te l
 
 ## Paso 5 · Cargar los retos en CTFd
 
-**Seis retos, tres por bloque.** Los valores exactos, los puntos y las descripciones están en `CTFd_Lab2_Hoja_de_Carga.md`, listos para copiar y pegar.
+**Seis retos, tres por bloque, en la categoría `Lab 2`** — misma convención de nombres cortos y puntuación 1-3 que ya usas en Lab 1 y Clase 3.
 
-| Reto | Puntos | Bandera |
+| Reto (categoría **Lab 2**) | Puntos | Bandera |
 |---|---|---|
-| Lab 2 · Bloque A — mínimo aceptable | 90 | `CT{lab2A_minimo_83654c}` |
-| Lab 2 · Bloque A — con rescate | 45 | `CT{lab2A_rescate_bfc8a7}` |
-| Lab 2 · Bloque A — nivel completo | 60 | `CT{lab2A_completo_7d5650}` |
-| Lab 2 · Bloque B — mínimo aceptable | 60 | `CT{lab2B_minimo_c70a29}` |
-| Lab 2 · Bloque B — con rescate | 30 | `CT{lab2B_rescate_44c25f}` |
-| Lab 2 · Bloque B — nivel completo | 40 | `CT{lab2B_completo_c5fe32}` |
+| A Mínimo | 3 | `CT{lab2A_minimo_83654c}` |
+| A Completo | 2 | `CT{lab2A_completo_7d5650}` |
+| A Rescate | 1 | `CT{lab2A_rescate_bfc8a7}` |
+| B Mínimo | 2 | `CT{lab2B_minimo_c70a29}` |
+| B Completo | 1 | `CT{lab2B_completo_c5fe32}` |
+| B Rescate | 1 | `CT{lab2B_rescate_44c25f}` |
+
+Lo más rápido: **Admin → Challenges → Import CSV** con `CTFd_Lab2_Retos.csv`.
 
 Todos: tipo **Standard**, bandera **estática**, **sensible a mayúsculas**, como en el Lab 1.
 

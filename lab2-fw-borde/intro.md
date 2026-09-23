@@ -37,16 +37,16 @@ Cada bloque tiene **mínimo aceptable** y **nivel completo**, y cada uno entrega
 
 Cuando `ct-check` te da una bandera, **te dice a qué reto de CTFd va**. El reto se llama exactamente igual que lo que aparece en pantalla. No tienes que adivinar nada.
 
-Hay seis retos, tres por bloque:
+Hay seis retos, tres por bloque, todos en la categoría **Lab 2** de CTFd:
 
-| Reto de CTFd | Se obtiene |
-|---|---|
-| Bloque A — mínimo aceptable | con los 4 flujos del mínimo |
-| Bloque A — con rescate | igual, pero habiendo usado `ct-rescate A` |
-| Bloque A — nivel completo | con los 6 flujos |
-| Bloque B — mínimo aceptable | con el registro funcionando |
-| Bloque B — con rescate | igual, pero habiendo usado `ct-rescate B` |
-| Bloque B — nivel completo | con un prefijo por regla de denegación |
+| Reto (categoría **Lab 2**) | Puntos | Se obtiene |
+|---|---|---|
+| **A Mínimo** | 3 | con los 4 flujos del mínimo |
+| **A Completo** | 2 | con los 6 flujos · **se suma** a A Mínimo o A Rescate |
+| **A Rescate** | 1 | igual que A Mínimo, pero habiendo usado `ct-rescate A` |
+| **B Mínimo** | 2 | con el registro funcionando |
+| **B Completo** | 1 | con un prefijo por regla de denegación · **se suma** a B Mínimo |
+| **B Rescate** | 1 | igual que B Mínimo, pero habiendo usado `ct-rescate B` |
 
 **El nivel completo no reemplaza al mínimo: se suma.** Si llegas a los 6 flujos, `ct-check A` te entrega **dos** banderas y subes las dos.
 
