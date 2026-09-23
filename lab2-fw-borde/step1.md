@@ -58,6 +58,12 @@ ct-probar usuarios internet 443
 
 Nadie del personal puede abrir una página web.
 
+## Una confusión que conviene evitar ya
+
+Todo lo que empieza por `ip saddr`, `ct state`, `type filter` o `log prefix` son **líneas del archivo de reglas**, no comandos de la terminal. Si pegas una de esas líneas en la terminal, Linux responde algo como `Object "saddr" is unknown` — está intentando ejecutar el comando `ip`, que no tiene nada que ver.
+
+Los comandos de verdad empiezan por `nft`, `ct-` o son de Linux (`vim`, `cat`, `ss`).
+
 ## Antes de seguir
 
 Los números van de diez en diez —10, 20, 90— por una razón: así se intercala un renglón nuevo sin renumerar toda la tabla. Tus renglones van a ser el 30, el 40 y el 50.

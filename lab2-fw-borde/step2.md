@@ -24,11 +24,21 @@ El SMB desde la DMZ es el innegociable de la clase 4: la DMZ es la zona que se d
 
 ## La forma de un renglón
 
+> ⚠ **Esto es una LÍNEA DE ARCHIVO, no un comando.** Va dentro de `chain forward { ... }` en `/root/fw-borde.nft`. Si la pegas en la terminal, Linux te responde `Object "saddr" is unknown, try "ip help"` — porque está intentando ejecutar el comando `ip`, no tu regla.
+
 ```
 ip saddr <origen> ip daddr <destino> tcp dport <puerto> accept
 ```{{copy}}
 
 Un renglón, un flujo. Origen, destino, puerto. Los tres, siempre.
+
+Si quieres probar una regla al vuelo sin tocar el archivo, esa misma línea **sí** se puede ejecutar anteponiéndole la tabla y la cadena:
+
+```
+nft add rule inet borde forward ip saddr 192.168.30.0/24 ip daddr 192.168.20.10 tcp dport 1433 accept
+```{{copy}}
+
+Sirve para experimentar, pero **no queda en el archivo** — y el archivo es lo que se entrega.
 
 Las direcciones que necesitas:
 

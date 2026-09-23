@@ -20,6 +20,8 @@ Una línea, al final de la cadena, antes de que actúe la política por defecto:
 log prefix "CT-DENY-DEFAULT " counter
 ```{{copy}}
 
+> Recuerda: **línea de archivo, no comando.** Va dentro de `chain forward { ... }`.
+
 Dos detalles que importan:
 
 - **`log` no es terminal.** Registra el paquete y lo deja seguir, así que cae en `policy drop` como corresponde. Por eso no lleva `drop` pegado.
