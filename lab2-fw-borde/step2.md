@@ -53,13 +53,13 @@ Comprueba la sintaxis **antes** de aplicar. Cuesta dos segundos:
 
 ```
 nft -c -f /root/fw-borde.nft
-```{{execute}}
+```{{exec}}
 
 Y entonces sí:
 
 ```
 nft -f /root/fw-borde.nft
-```{{execute}}
+```{{exec}}
 
 ## Cuidado con el orden
 
@@ -73,7 +73,7 @@ No al final. Al final nunca hay tiempo.
 
 ```
 nft -a list ruleset
-```{{execute}}
+```{{exec}}
 
 Cada renglón lleva su `# handle N`. Con ese número:
 
@@ -87,6 +87,14 @@ Dos preguntas, las mismas siempre: qué flujo habilita y qué pasaría en Cóndo
 
 ```
 ct-check A
-```{{execute}}
+```{{exec}}
 
-Guarda la bandera que te dé. **Con esa bandera entras al bloque B sin repetir nada.**
+Te va a dar **una bandera si llegaste al mínimo, y dos si llegaste al completo** — la del mínimo se suma con la de completo, no la reemplaza. Cada una dice a qué reto de CTFd va.
+
+Cópialas ya. Si se te pierden en el scroll:
+
+```
+ct-banderas
+```{{exec}}
+
+**Con la bandera del bloque A entras al bloque B sin repetir nada.**

@@ -29,17 +29,17 @@ Aplícalo y míralo:
 
 ```
 nft -f /root/fw-borde.nft && nft -a list ruleset
-```{{execute}}
+```{{exec}}
 
 Genera un intento que debe caer y vuelve a mirar el contador:
 
 ```
 ct-probar internet erp 1433
-```{{execute}}
+```{{exec}}
 
 ```
 nft list ruleset
-```{{execute}}
+```{{exec}}
 
 El contador subió. Eso es la diferencia entre un firewall que deniega y uno que **te cuenta** que denegó.
 
@@ -58,11 +58,11 @@ Ahora tienes dos prefijos distintos. Compruébalo:
 
 ```
 ct-probar tienda erp 445
-```{{execute}}
+```{{exec}}
 
 ```
 nft list ruleset
-```{{execute}}
+```{{exec}}
 
 El que subió es `CT-DENY-SMB`. Si mañana ese contador se dispara, no estás viendo ruido de internet: estás viendo **tu DMZ intentando hablar SMB con el ERP**. Eso es un incidente, y ahora tiene nombre.
 
@@ -70,12 +70,19 @@ El que subió es `CT-DENY-SMB`. Si mañana ese contador se dispara, no estás vi
 
 ```
 ct-check B
-```{{execute}}
+```{{exec}}
 
 ## Antes de cerrar
 
+Recupera todas tus banderas de la sesión y cópialas a un sitio seguro:
+
+```
+ct-banderas
+```{{exec}}
+
+
 ```
 ct-informe
-```{{execute}}
+```{{exec}}
 
 Te deja `/root/politica-fw-borde-condor.md` con tu tabla de flujos, tu ruleset y tus justificaciones. **Cópialo fuera de la sesión ahora**: junto con `/root/fw-borde.nft` es el artefacto que va al Runbook.

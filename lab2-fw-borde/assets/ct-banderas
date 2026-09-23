@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Vuelve a mostrar las banderas que capturaste en esta sesión.
+source /opt/ct/lib.sh
+titulo "Tus banderas de esta sesión"
+if [ ! -s "$MIS" ]; then
+  echo "  Todavía no capturaste ninguna. Corre ${C_B}ct-check A${C_N} cuando tengas tus renglones."
+  echo
+  exit 0
+fi
+while IFS=$'\t' read -r reto flag; do
+  [ -z "$flag" ] && continue
+  echo "  ${C_NOTA}${reto}${C_N}"
+  echo "     ${C_B}${flag}${C_N}"
+  echo
+done < "$MIS"
+echo "  Cada bandera va al reto de CTFd que lleva ESE mismo nombre."
+echo "  Cópialas ahora: cuando la sesión se cierre, esto se pierde."
+echo

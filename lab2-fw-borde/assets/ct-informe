@@ -60,14 +60,26 @@ for c in A Afull B Bfull; do
   if hecho $c; then echo "- $c: superado"; else echo "- $c: pendiente"; fi
 done
 echo
-echo "## 6. Reversión"
+echo "## 6. Banderas capturadas"
+echo
+if [ -s "$MIS" ]; then
+  echo "| Reto de CTFd | Bandera |"
+  echo "|---|---|"
+  while IFS=$'\t' read -r reto flag; do
+    [ -n "$flag" ] && echo "| $reto | \`$flag\` |"
+  done < "$MIS"
+else
+  echo "_(Ninguna todavía.)_"
+fi
+echo
+echo "## 7. Reversión"
 echo
 echo '```bash'
 echo "nft flush ruleset          # deja el firewall sin filtrado (solo para depurar)"
 echo "nft -f fw-borde.nft        # volver al estado documentado"
 echo '```'
 echo
-echo "## 7. Qué NO cubre"
+echo "## 8. Qué NO cubre"
 echo
 echo "_(Alcance honesto: esto filtra el tráfico que cruza entre zonas de la Zona A."
 echo "La Zona B se filtra con grupos de seguridad del proveedor de nube. Clase 10.)_"

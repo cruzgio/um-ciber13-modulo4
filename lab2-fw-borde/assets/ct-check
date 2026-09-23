@@ -39,13 +39,17 @@ A|a)
   echo
   if [ $full_f -eq 0 ]; then
     echo "  ${C_OK}${C_B}NIVEL COMPLETO — 6 de 6.${C_N} Tu política hace exactamente lo que dice."
+    echo "  Te llevas ${C_B}dos banderas${C_N}: la del mínimo y, además, la de completo."
     marcar A; marcar Afull
-    if hecho rescateA; then bandera "$CT_FLAG_A_RESCATE"; else bandera "$CT_FLAG_A_FULL"; fi
+    if hecho rescateA; then bandera "$CT_FLAG_A_RESCATE" "$CT_RETO_A_RESCATE"
+    else                   bandera "$CT_FLAG_A_MIN"     "$CT_RETO_A_MIN"; fi
+    bandera "$CT_FLAG_A_FULL" "$CT_RETO_A_FULL"
   elif [ $min_f -eq 0 ]; then
     echo "  ${C_OK}${C_B}MÍNIMO ACEPTABLE — 4 de 4.${C_N} Puedes seguir al bloque B con esta bandera."
     info "Te faltan $full_f flujo(s) para el nivel completo. Puedes volver a ellos cuando quieras."
     marcar A
-    if hecho rescateA; then bandera "$CT_FLAG_A_RESCATE"; else bandera "$CT_FLAG_A_MIN"; fi
+    if hecho rescateA; then bandera "$CT_FLAG_A_RESCATE" "$CT_RETO_A_RESCATE"
+    else                   bandera "$CT_FLAG_A_MIN"     "$CT_RETO_A_MIN"; fi
   else
     echo "  ${C_MAL}TODAVÍA NO${C_N} — faltan $min_f flujo(s) del mínimo."
     info "Si el flujo 4 PASA, no tienes una regla de más: tienes una regla de menos arriba que acepta de sobra."
@@ -96,14 +100,18 @@ B|b)
     ok "El intento tienda-01 → erp-prod :445 quedó registrado como: ${C_B}${P2}${C_N}"
     echo
     echo "  ${C_OK}${C_B}NIVEL COMPLETO.${C_N} Tu log no dice solo «algo se cayó»: dice ${C_B}qué regla lo tiró${C_N}."
+    echo "  Te llevas ${C_B}dos banderas${C_N}: la del mínimo y, además, la de completo."
     marcar B; marcar Bfull
-    if hecho rescateB; then bandera "$CT_FLAG_B_RESCATE"; else bandera "$CT_FLAG_B_FULL"; fi
+    if hecho rescateB; then bandera "$CT_FLAG_B_RESCATE" "$CT_RETO_B_RESCATE"
+    else                   bandera "$CT_FLAG_B_MIN"     "$CT_RETO_B_MIN"; fi
+    bandera "$CT_FLAG_B_FULL" "$CT_RETO_B_FULL"
   else
     echo "  ${C_OK}${C_B}MÍNIMO ACEPTABLE.${C_N} Lo que se deniega deja rastro."
     info "Para el nivel completo: dale a la denegación explícita de SMB su PROPIO prefijo,"
     info "distinto del de la denegación por defecto. Así el log te dice qué regla disparó."
     marcar B
-    if hecho rescateB; then bandera "$CT_FLAG_B_RESCATE"; else bandera "$CT_FLAG_B_MIN"; fi
+    if hecho rescateB; then bandera "$CT_FLAG_B_RESCATE" "$CT_RETO_B_RESCATE"
+    else                   bandera "$CT_FLAG_B_MIN"     "$CT_RETO_B_MIN"; fi
   fi
   ;;
 

@@ -6,7 +6,7 @@
 
 ```
 ct-mapa
-```{{execute}}
+```{{exec}}
 
 Cuatro zonas alrededor de **fw-borde**. Todo lo que cruza de una zona a otra pasa por la cadena `forward` del firewall: eso es lo que vas a escribir.
 
@@ -14,13 +14,13 @@ Entra al firewall:
 
 ```
 ct-shell
-```{{execute}}
+```{{exec}}
 
 ## Lo que escribimos el lunes
 
 ```
 nft list ruleset
-```{{execute}}
+```{{exec}}
 
 Ahí están, ya cargados:
 
@@ -38,23 +38,23 @@ El renglón 90 no se escribe: **es la política por defecto de la cadena**, `pol
 
 ```
 ct-probar internet tienda 443
-```{{execute}}
+```{{exec}}
 
 ```
 ct-probar tienda erp 1433
-```{{execute}}
+```{{exec}}
 
 Ahora mira lo que todavía no funciona:
 
 ```
 ct-probar usuarios erp 1433
-```{{execute}}
+```{{exec}}
 
 Contabilidad no puede facturar. Ese es el flujo que falta, y no es el único.
 
 ```
 ct-probar usuarios internet 443
-```{{execute}}
+```{{exec}}
 
 Nadie del personal puede abrir una página web.
 

@@ -2,12 +2,16 @@
 
 ## Lo que capturaste
 
-| Bandera | Qué demuestra |
+| Reto de CTFd | Qué demuestra |
 |---|---|
-| A · mínimo | Los cuatro flujos que Cóndor Tech no puede no tener |
-| A · completo | Los seis, incluida la salida del personal |
-| B · mínimo | Lo denegado deja rastro |
-| B · completo | El log dice **qué regla** lo tiró |
+| Bloque A — mínimo aceptable | Los cuatro flujos que Cóndor Tech no puede no tener |
+| Bloque A — nivel completo | Los seis, incluida la salida del personal |
+| Bloque B — mínimo aceptable | Lo denegado deja rastro |
+| Bloque B — nivel completo | El log dice **qué regla** lo tiró |
+
+Cada bandera va al reto que lleva ese mismo nombre. Si usaste `ct-rescate`, la tuya va al reto «con rescate» del bloque correspondiente.
+
+**Antes de cerrar la sesión:** `ct-banderas` te las muestra todas otra vez.
 
 ## Llévate estos dos archivos
 

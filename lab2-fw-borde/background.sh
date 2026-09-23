@@ -7,7 +7,7 @@ apt-get update -qq
 apt-get install -y -qq nftables iproute2 socat curl python3 vim nano >/dev/null 2>&1
 mkdir -p /opt/ct
 chmod +x /opt/ct/* 2>/dev/null
-for h in ct-shell ct-check ct-regla ct-retomar ct-rescate ct-informe ct-mapa ct-probar; do
+for h in ct-shell ct-check ct-regla ct-retomar ct-rescate ct-informe ct-mapa ct-probar ct-banderas; do
   ln -sf /opt/ct/$h /usr/local/bin/$h
 done
 : > /opt/ct/estado

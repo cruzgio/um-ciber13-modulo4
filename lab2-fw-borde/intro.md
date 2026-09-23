@@ -33,6 +33,31 @@ Cada bloque tiene **mínimo aceptable** y **nivel completo**, y cada uno entrega
 
 **Si te trabas, no te quedes callado ni te quedes peleando.** Escribe `PAUSA` en el chat de Teams y paramos. O usa `ct-rescate` sin culpa: vale media bandera y te deja seguir.
 
+## Cómo funcionan las banderas
+
+Cuando `ct-check` te da una bandera, **te dice a qué reto de CTFd va**. El reto se llama exactamente igual que lo que aparece en pantalla. No tienes que adivinar nada.
+
+Hay seis retos, tres por bloque:
+
+| Reto de CTFd | Se obtiene |
+|---|---|
+| Bloque A — mínimo aceptable | con los 4 flujos del mínimo |
+| Bloque A — con rescate | igual, pero habiendo usado `ct-rescate A` |
+| Bloque A — nivel completo | con los 6 flujos |
+| Bloque B — mínimo aceptable | con el registro funcionando |
+| Bloque B — con rescate | igual, pero habiendo usado `ct-rescate B` |
+| Bloque B — nivel completo | con un prefijo por regla de denegación |
+
+**El nivel completo no reemplaza al mínimo: se suma.** Si llegas a los 6 flujos, `ct-check A` te entrega **dos** banderas y subes las dos.
+
+Si se te fue una bandera en el scroll:
+
+```
+ct-banderas
+```
+
+Te vuelve a mostrar todas las de esta sesión con su reto. **Cópialas antes de cerrar**: cuando la sesión termina, se pierden.
+
 ## Tus herramientas
 
 ```
@@ -40,6 +65,7 @@ ct-shell                       entra a fw-borde
 ct-mapa                        el mapa de zonas y quién escucha qué
 ct-probar <ori> <dst> <puerto> prueba un flujo tú mismo
 ct-check A | B                 el auditor externo
+ct-banderas                    vuelve a mostrar tus banderas
 ct-regla <handle>              documenta un renglón
 ct-retomar <bandera>           entra al bloque B sin repetir el A
 ct-rescate A | B               la referencia del bloque (media bandera)

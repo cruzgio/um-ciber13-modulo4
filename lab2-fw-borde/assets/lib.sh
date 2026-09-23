@@ -40,11 +40,15 @@ flujo() {
 marcar() { grep -qxF "$1" "$ESTADO" 2>/dev/null || echo "$1" >> "$ESTADO"; }
 hecho()  { grep -qxF "$1" "$ESTADO" 2>/dev/null; }
 
+MIS="$CT_DIR/mis-banderas.txt"
+
+# bandera <valor> <nombre del reto en CTFd>
 bandera() {
   echo
-  echo "  ${C_OK}${C_B}BANDERA:${C_N} ${C_B}$1${C_N}"
-  echo "  Súbela en TU cuenta de CTFd."
+  echo "  ${C_OK}${C_B}BANDERA${C_N}   ${C_B}$1${C_N}"
+  echo "  ${C_NOTA}Reto de CTFd:${C_N} $2"
   echo
+  grep -qF "$1" "$MIS" 2>/dev/null || printf '%s\t%s\n' "$2" "$1" >> "$MIS"
 }
 
 exigir_escenario() {
