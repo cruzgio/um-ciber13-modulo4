@@ -16,8 +16,8 @@ table inet borde {
         ip saddr 192.168.10.10 ip daddr 192.168.20.10 tcp dport 1433 accept
         # 30 · usuarios → erp-prod :1433
         ip saddr 192.168.30.0/24 ip daddr 192.168.20.10 tcp dport 1433 accept
-        # 40 · usuarios → internet :443
-        ip saddr 192.168.30.0/24 ip daddr 203.0.113.0/24 tcp dport 443 accept
+        # 40 · tienda-01 → api-pagos :443
+        ip saddr 192.168.10.10 ip daddr 203.0.113.50 tcp dport 443 accept
 
         # 50 · SMB desde la DMZ: se deniega Y se registra con su propio nombre
         ip saddr 192.168.10.0/24 ip daddr 192.168.20.0/24 tcp dport 445 \

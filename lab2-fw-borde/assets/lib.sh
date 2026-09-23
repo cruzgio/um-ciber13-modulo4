@@ -17,13 +17,13 @@ nftf() { ip netns exec fwborde nft "$@"; }
 
 # Nombres amables -> zona e IP
 zona_de() { case "$1" in
-    internet) echo internet ;;
+    internet|pagos|api-pagos) echo internet ;;
     tienda|dmz|tienda-01) echo dmz ;;
     erp|erp-prod|interna) echo interna ;;
     usuarios|pc|contabilidad) echo usuarios ;;
     *) echo "" ;; esac; }
 ip_de() { case "$1" in
-    internet|externo|sitio-externo) echo 203.0.113.50 ;;
+    internet|pagos|api-pagos|externo) echo 203.0.113.50 ;;
     tienda|dmz|tienda-01) echo 192.168.10.10 ;;
     erp|erp-prod|interna) echo 192.168.20.10 ;;
     usuarios|pc|contabilidad) echo 192.168.30.50 ;;

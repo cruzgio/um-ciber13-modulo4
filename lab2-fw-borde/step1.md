@@ -55,10 +55,10 @@ ct-probar usuarios erp 1433
 Contabilidad no puede facturar. Ese es el flujo que falta, y no es el único.
 
 ```
-ct-probar usuarios internet 443
+ct-probar tienda pagos 443
 ```{{exec}}
 
-Nadie del personal puede abrir una página web.
+La tienda no puede cobrar: no alcanza la pasarela de pagos.
 
 ## Una confusión que conviene evitar ya
 

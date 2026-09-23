@@ -34,7 +34,7 @@ A|a)
   echo
   echo "  ${C_B}Nivel completo${C_N}"
   evaluar "internet → erp-prod :1433   (nadie entra al ERP)"     internet erp      1433 cae  full
-  evaluar "usuarios → internet :443    (salida web del personal)" usuarios internet 443  pasa full
+  evaluar "tienda-01 → api-pagos :443  (la tienda cobra)"        tienda   pagos    443  pasa full
 
   echo
   if [ $full_f -eq 0 ]; then
@@ -54,6 +54,7 @@ A|a)
     echo "  ${C_MAL}TODAVÍA NO${C_N} — faltan $min_f flujo(s) del mínimo."
     info "Si el flujo 4 PASA, no tienes una regla de más: tienes una regla de menos arriba que acepta de sobra."
     info "Si el flujo 3 CAE, todavía no escribiste el renglón de usuarios hacia el ERP."
+    info "Si el flujo 6 CAE, falta el renglón de la tienda hacia la pasarela de pagos."
     info "¿Atascado? ct-rescate A (media bandera, y te deja seguir)."
     exit 1
   fi

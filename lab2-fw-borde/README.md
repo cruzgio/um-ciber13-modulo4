@@ -27,7 +27,7 @@ Cuatro zonas de Cóndor Tech, cada una un espacio de red, todas colgando de `fwb
 
 | Zona | Red | Host | IP | Escucha |
 |---|---|---|---|---|
-| internet | 203.0.113.0/24 | sitio-externo | .50 | 443 |
+| internet | 203.0.113.0/24 | api-pagos | .50 | 443 |
 | dmz | 192.168.10.0/24 | tienda-01 | .10 | 443 |
 | interna | 192.168.20.0/24 | erp-prod | .10 | 1433, 445 |
 | usuarios | 192.168.30.0/24 | pc-contabilidad | .50 | — |

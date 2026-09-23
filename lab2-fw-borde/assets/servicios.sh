@@ -3,7 +3,7 @@
 set -u
 mkdir -p /opt/ct/cuerpos
 printf 'tienda-01 - Condor Tech (DMZ)'        > /opt/ct/cuerpos/tienda.txt
-printf 'sitio-externo - internet'             > /opt/ct/cuerpos/externo.txt
+printf 'api-pagos - pasarela de pagos (internet)' > /opt/ct/cuerpos/externo.txt
 
 http() { # ns, puerto, clave
   ip netns exec "$1" setsid socat TCP-LISTEN:$2,fork,reuseaddr \

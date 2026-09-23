@@ -6,17 +6,18 @@ if [ $# -ne 3 ]; then
   titulo "ct-probar · ¿este flujo cruza el firewall?"
   echo "  Uso:  ${C_B}ct-probar <origen> <destino> <puerto>${C_N}"
   echo
-  echo "  Nombres: ${C_B}internet · tienda · erp · usuarios${C_N}"
+  echo "  Nombres: ${C_B}internet · pagos · tienda · erp · usuarios${C_N}"
   echo "  Ejemplos:"
   echo "     ct-probar internet tienda 443"
   echo "     ct-probar usuarios erp 1433"
+  echo "     ct-probar tienda pagos 443"
   echo "     ct-probar tienda erp 445"
   echo
   exit 2
 fi
 ORI="$(zona_de "$1")"; DST="$(ip_de "$2")"
 if [ -z "$ORI" ] || [ -z "$DST" ]; then
-  mal "No conozco '$1' o '$2'. Usa: internet, tienda, erp, usuarios."; exit 1
+  mal "No conozco '$1' o '$2'. Usa: internet, pagos, tienda, erp, usuarios."; exit 1
 fi
 printf "  %s → %s:%s ... " "$1" "$2" "$3"
 if flujo "$1" "$2" "$3"; then echo "${C_OK}PASA${C_N}"; else echo "${C_MAL}CAE${C_N}"; fi

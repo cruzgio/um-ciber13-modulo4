@@ -51,7 +51,7 @@ echo "| tienda-01 → erp-prod :1433 | pasa |"
 echo "| usuarios → erp-prod :1433 | pasa |"
 echo "| tienda-01 → erp-prod :445 | cae y queda registrado |"
 echo "| internet → erp-prod :1433 | cae y queda registrado |"
-echo "| usuarios → internet :443 | pasa |"
+echo "| tienda-01 → api-pagos :443 | pasa |"
 echo
 echo "Comprobable con \`ct-probar <origen> <destino> <puerto>\`."
 echo

@@ -25,7 +25,7 @@ Máximo alcanzable: **8 puntos** (3 + 2 + 2 + 1). Comparable al Lab 1, que suma 
 
 **A Mínimo.** Los cuatro flujos que Cóndor Tech no puede no tener, funcionando en fw-borde: la tienda vendiendo, la tienda hablando con el ERP, contabilidad facturando, y SMB sin cruzar desde la DMZ. La bandera la entrega `ct-check A`.
 
-**A Completo.** Los seis flujos: además de los cuatro del mínimo, la salida web del personal y el ERP inalcanzable desde internet. **Se suma** a A Mínimo o a A Rescate; no la reemplaza.
+**A Completo.** Los seis flujos: además de los cuatro del mínimo, la salida de la tienda a la pasarela de pagos y el ERP inalcanzable desde internet. **Se suma** a A Mínimo o a A Rescate; no la reemplaza.
 
 **A Rescate.** El mismo resultado del bloque A, alcanzado con `ct-rescate A`. Está bien usarlo: media bandera vale más que veinte minutos trabado.
 

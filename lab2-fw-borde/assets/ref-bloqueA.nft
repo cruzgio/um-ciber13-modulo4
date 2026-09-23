@@ -19,8 +19,8 @@ table inet borde {
         # 30 · usuarios → erp-prod :1433   contabilidad factura en el ERP
         ip saddr 192.168.30.0/24 ip daddr 192.168.20.10 tcp dport 1433 accept
 
-        # 40 · usuarios → internet :443    salida web del personal
-        ip saddr 192.168.30.0/24 ip daddr 203.0.113.0/24 tcp dport 443 accept
+        # 40 · tienda-01 → api-pagos :443  sin esto la tienda no cobra
+        ip saddr 192.168.10.10 ip daddr 203.0.113.50 tcp dport 443 accept
 
         # 50 · tienda-01 → erp-prod :445   SMB no cruza la frontera de la DMZ
         ip saddr 192.168.10.0/24 ip daddr 192.168.20.0/24 tcp dport 445 drop

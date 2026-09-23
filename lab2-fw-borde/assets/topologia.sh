@@ -16,7 +16,7 @@ cat <<'MAPA'
   Zonas de Cóndor Tech en este escenario
 
     ZONA         RED                HOST              IP               ESCUCHA
-    internet     203.0.113.0/24     sitio-externo     203.0.113.50     443
+    internet     203.0.113.0/24     api-pagos         203.0.113.50     443
     dmz          192.168.10.0/24    tienda-01         192.168.10.10    443
     interna      192.168.20.0/24    erp-prod          192.168.20.10    1433, 445
     usuarios     192.168.30.0/24    pc-contabilidad   192.168.30.50    —
@@ -24,9 +24,12 @@ cat <<'MAPA'
     fw-borde tiene una pata en cada zona (siempre el .1) y filtra
     todo lo que cruza entre ellas en la cadena  forward.
 
+    api-pagos es la pasarela de pagos del proveedor con el que cobra
+    la tienda. Vive en internet: la tienda tiene que poder alcanzarla.
+
     Probar un flujo:   ct-probar <origen> <destino> <puerto>
-    Ejemplo:           ct-probar usuarios erp 1433
-    Nombres válidos:   internet · tienda · erp · usuarios
+    Ejemplo:           ct-probar tienda pagos 443
+    Nombres válidos:   internet · pagos · tienda · erp · usuarios
 MAPA
 exit 0
 fi

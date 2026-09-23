@@ -18,7 +18,7 @@
 | Desde | Hacia | Puerto | Debe |
 |---|---|---|---|
 | internet | erp-prod | 1433 | **caer** |
-| usuarios | internet | 443 | **pasar** ← tú |
+| tienda-01 | api-pagos | 443 | **pasar** ← tú |
 
 El SMB desde la DMZ es el innegociable de la clase 4: la DMZ es la zona que se da por perdida. Que un servidor de la DMZ pueda hablar SMB con el ERP es exactamente el camino que un atacante quiere.
 
@@ -43,7 +43,7 @@ Sirve para experimentar, pero **no queda en el archivo** — y el archivo es lo 
 Las direcciones que necesitas:
 
 ```
-internet   203.0.113.0/24      sitio-externo 203.0.113.50
+internet   203.0.113.0/24      api-pagos 203.0.113.50
 dmz        192.168.10.0/24     tienda-01     192.168.10.10
 interna    192.168.20.0/24     erp-prod      192.168.20.10
 usuarios   192.168.30.0/24     pc-conta      192.168.30.50
