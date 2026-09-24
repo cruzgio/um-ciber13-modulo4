@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 case "$1" in
- 1) echo "B1: Statistics de MACs. En tshark:  tshark -r <pcap> -T fields -e eth.src -e eth.dst | tr '\t' '\n' | sort -u | grep -v ffff. No cuentes el broadcast." ;;
+ 1) echo "B1: Statistics -> Endpoints -> Ethernet (sin Broadcast). En tshark:  tshark -r <pcap> -T fields -e eth.src -e eth.dst | tr '\t' '\n' | sort -u | grep -v ffff. No cuentes el broadcast." ;;
  2) echo "B2: la MAC del atacante aparece MUCHAS veces en ARP. Antes de atacar, esa MAC pidió el gateway con SU IP real. Filtra: arp.opcode==1 && eth.src==<mac_atacante>." ;;
  3) echo "B3: Wireshark te resalta 'duplicate use of 192.168.30.1'. Dos MAC dicen ser el gateway. Una es la de arp op=2 al principio (real), la otra la que se repite (falsa)." ;;
  4) echo "B4: el ataque dejó ver un login. Filtra http.request.method==POST y sigue el stream. La clave viaja en el cuerpo del POST, en claro." ;;
