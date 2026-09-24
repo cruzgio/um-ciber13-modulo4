@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Comprueba una respuesta y entrega la bandera de CTFd si es correcta.
+PCAP=/root/caso/condor_incidente2.pcap
+norm(){ echo "$1" | tr 'A-Z' 'a-z' | tr -d ' '; }
+case "$1" in
+ 1) R=$(norm "$2"); [ "$R" = "4" ] && echo "CORRECTO. Bandera CTFd (reto 6.1):  CT{4}" || echo "No. ¿Contaste MACs distintas sin el broadcast?" ;;
+ 2) R=$(norm "$2"); [ "$R" = "192.168.30.66" ] && echo "CORRECTO. Bandera CTFd (reto 6.2):  CT{192.168.30.66}" || echo "No. Busca la IP real del dueño de la MAC que suplanta." ;;
+ 3) R=$(norm "$2"); if [ "$R" = "02:00:00:de:ad:66" ]; then echo "CORRECTO. Bandera CTFd (reto 6.3):  CT{02:00:00:de:ad:66}"; else echo "No. Es la MAC que dice ser el gateway y no lo es."; fi ;;
+ 4) R=$(norm "$2"); [ "$R" = "cond0r.set2026" ] && echo "CORRECTO. Bandera CTFd (reto 6.4):  CT{Cond0r.Set2026}" || echo "No. La clave está en el cuerpo del POST, respeta mayúsculas al enviarla a CTFd." ;;
+ 5) R=$(norm "$2"); [ "$R" = "15" ] && echo "CORRECTO. Bandera CTFd (reto 6.5):  CT{15}" || echo "No. Es el frame más bajo con 'duplicate-address-detected'." ;;
+ *) echo "Uso: ct-bandera <1-5> <tu-respuesta>" ;;
+esac

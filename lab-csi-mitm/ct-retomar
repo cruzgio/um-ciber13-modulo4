@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Entra al Bloque B con el reconocimiento ya resuelto (para quien no cerró el A).
+cat <<'R'
+  ── Estado del Bloque A (ya resuelto por vos o entregado aquí) ──
+   B1 · hosts/MAC en la captura ......... 4 direcciones MAC
+   B2 · IP del atacante ................. 192.168.30.66
+   B3 · MAC real 02:00:00:00:30:01 · suplantada 02:00:00:de:ad:66
+
+  Con esto ya podés ir por la credencial (B4) y el frame de inicio (B5).
+  Sugerencia:  ct-pista 4   y   ct-pista 5
+R

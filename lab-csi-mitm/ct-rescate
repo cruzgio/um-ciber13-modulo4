@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+echo "Referencia del caso (usarla cuesta media bandera; mejor eso que quedar trabado):"
+echo " B1=4  B2=192.168.30.66  B3=02:00:00:de:ad:66 (real 02:00:00:00:30:01)  B4=Cond0r.Set2026  B5=frame 15"
+echo "Cárgalas en CTFd como CT{...} en el reto correspondiente."

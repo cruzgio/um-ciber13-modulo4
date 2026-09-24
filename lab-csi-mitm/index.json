@@ -1,0 +1,15 @@
+{
+  "title": "Misión CSI — MitM en Wireshark/tshark (Cóndor Tech)",
+  "description": "Investigá el Incidente #2 de Cóndor Tech: una captura donde alguien envenenó la red. Cinco banderas, de fácil a difícil. Plan B del que no puede usar Wireshark local.",
+  "details": {
+    "steps": [
+      { "title": "Bloque A — reconocimiento", "text": "step1.md", "verify": "verify1.sh" },
+      { "title": "Bloque B — la credencial y el frame cero", "text": "step2.md", "verify": "verify2.sh" }
+    ],
+    "intro": { "text": "intro.md" },
+    "finish": { "text": "finish.md" }
+  },
+  "backend": { "imageid": "ubuntu" },
+  "interface": { "layout": "ide" },
+  "files": [ "assets/condor_incidente2.pcap" ]
+}

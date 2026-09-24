@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+cat <<'MAPA'
+  ── Zona de usuarios de Cóndor Tech · 192.168.30.0/24 ──
+
+     fw-borde (gateway)        192.168.30.1     MAC real: 02:00:00:00:30:01
+     pc-contabilidad (víctima) 192.168.30.50    MAC:      02:00:00:00:30:50
+     un host de la red         192.168.30.??     MAC:      ??  <- averígualo
+     consola de atención       192.168.20.30    servidor web :80
+
+  El caso: una mañana la red "anda rara". Tenés la captura de esa mañana.
+  Averigua quién envenenó la red, qué robó, y cuándo empezó.
+MAPA

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Abre la captura del caso en tshark, con el filtro que le pases (o todo).
+PCAP=/root/caso/condor_incidente2.pcap
+if [ -z "$1" ]; then
+  tshark -r "$PCAP" 2>/dev/null | less -R
+else
+  tshark -r "$PCAP" -Y "$*" 2>/dev/null
+fi
