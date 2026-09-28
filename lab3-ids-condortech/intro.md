@@ -2,7 +2,7 @@
 
 La junta de Cóndor Tech aprobó dos cosas después del MitM: **cifrar** las comunicaciones (VPN) y **tener detección** (un IDS). Hoy te toca la segunda parte.
 
-Sos analista del SOC. Tenés un **Suricata** con las reglas **ET Open** ya cargadas y **tres capturas** de la red de esta semana. Tu trabajo no es atacar: es **leer lo que el sensor vio**, **triar** lo que importa, cazar **lo que el IDS dejó pasar**, y al final **escribir tu propia regla**.
+Sos analista del SOC. Tenés un **Suricata** con las reglas **ET Open** ya cargadas y **tres capturas** de la red de esta semana. Tu trabajo no es atacar: es **leer lo que el sensor vio**, **priorizar** lo que importa, cazar **lo que el IDS dejó pasar**, y al final **escribir tu propia regla**.
 
 > **Modo offline.** No hay una red de ataque en vivo. Suricata lee las capturas con `-r` y saca **exactamente las mismas alertas** que sacaría en tiempo real. Es como revisar la grabación de las cámaras en vez de esperar al ladrón.
 

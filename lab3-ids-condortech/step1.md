@@ -1,4 +1,4 @@
-# Bloque A — leer, triar y cazar (3.1 a 3.3)
+# Bloque A — leer, priorizar y cazar (3.1 a 3.3)
 
 Un IDS te dice en segundos cosas que a mano toman una hora. Pero también **alerta de más, alerta de menos, y es ciego a algunas cosas**. Hoy aprendés las tres.
 

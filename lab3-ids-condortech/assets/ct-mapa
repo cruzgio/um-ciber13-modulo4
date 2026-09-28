@@ -5,7 +5,7 @@ cat <<'MAPA'
   Sos analista del SOC. Tenés tres capturas de la red y un Suricata con
   las reglas ET Open ya cargadas. Cada checkpoint tiene DOS niveles:
      MÍNIMO   = leer la alerta que el IDS ya te dio.
-     COMPLETO = lo que hace un analista de verdad: triar, y encontrar
+     COMPLETO = lo que hace un analista de verdad: priorizar, y encontrar
                 lo que el IDS NO te dio (mirar el pcap, cazar con jq).
 
   /opt/ct/pcaps/
