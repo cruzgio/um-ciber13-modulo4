@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Corre TU regla propia sobre malware.pcap y verifica que dispara. Bandera 3.4.
+source /opt/ct/lib.sh
+exigir_listo
+if [ ! -f "$REGLA_ALUMNO" ]; then
+  mal "Todavía no tenés tu regla. Creá la plantilla con:  ct-mi-regla"
+  exit 1
+fi
+titulo "ct-check · tu regla sobre malware.pcap"
+OUT=$(mktemp -d)
+# corre SOLO la regla del alumno (rápido). -S ignora el ruleset ET.
+if ! suricata -S "$REGLA_ALUMNO" -r "$PCAPS/malware.pcap" -l "$OUT" -k none >/dev/null 2>&1; then
+  mal "Suricata no pudo cargar tu regla. Revisá la sintaxis:"
+  suricata -S "$REGLA_ALUMNO" -r "$PCAPS/malware.pcap" -l "$OUT" -k none 2>&1 | grep -iE "error|^E:" | head -4 | sed 's/^/     /'
+  rm -rf "$OUT"; exit 1
+fi
+N=$(grep -c '\[\*\*\]' "$OUT/fast.log" 2>/dev/null || echo 0)
+if [ "$N" -gt 0 ]; then
+  ok "Tu regla disparó $N vez(ces). Ejemplo:"
+  head -1 "$OUT/fast.log" | sed -E 's/\[Classification[^]]*\]//; s/^/     /'
+  marcar reglaOK
+  echo
+  # ¿triaje completo para el nivel completo?
+  if [ -f "$TRIAJE" ] && grep -qiE "severidad" "$TRIAJE" && \
+     [ "$(grep -cvE '^\s*$|^=|^NOTA|^--|^\s*\(' "$TRIAJE")" -ge 3 ]; then
+    echo "  ${C_OK}${C_B}NIVEL COMPLETO.${C_N} Tu regla funciona y dejaste la nota de triaje."
+    echo "  Te llevás ${C_B}dos banderas${C_N}: la del mínimo y, además, la de completo."
+    marcar triajeOK
+    if hecho rescate; then bandera "$CT_FLAG_34_RESCATE" "$CT_RETO_34_RESCATE"
+    else                   bandera "$CT_FLAG_34_MIN"     "$CT_RETO_34_MIN"; fi
+    bandera "$CT_FLAG_34_FULL" "$CT_RETO_34_FULL"
+  else
+    echo "  ${C_OK}${C_B}MÍNIMO ACEPTABLE.${C_N} Tu regla propia detecta el tráfico del malware."
+    info "Para el nivel completo: llená la nota de triaje (ct-triaje) y volvé a correr ct-check."
+    if hecho rescate; then bandera "$CT_FLAG_34_RESCATE" "$CT_RETO_34_RESCATE"
+    else                   bandera "$CT_FLAG_34_MIN"     "$CT_RETO_34_MIN"; fi
+  fi
+else
+  mal "Tu regla cargó bien pero NO disparó sobre malware.pcap."
+  info "¿El content coincide con el User-Agent real? Descubrilo con:  ct-buscar malware.pcap"
+  info "¿Sigue diciendo CAMBIAME? Editá $REGLA_ALUMNO con nano."
+  info "¿Atascado? ct-rescate (media bandera, y te deja seguir)."
+fi
+rm -rf "$OUT"

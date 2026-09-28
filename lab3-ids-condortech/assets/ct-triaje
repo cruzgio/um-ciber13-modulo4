@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+source /opt/ct/lib.sh
+if [ ! -f "$TRIAJE" ]; then
+cat > "$TRIAJE" <<'NOTA'
+NOTA DE TRIAJE · Cóndor Tech · Proceso de detección (v1)
+========================================================
+
+Qué disparó:
+   (¿qué regla/alerta saltó y sobre qué captura?)
+
+Severidad:
+   (alta / media / baja — y por qué, en una línea de negocio)
+
+Próxima acción:
+   (¿qué hace el analista ahora? contener, escalar, verificar...)
+
+-- Nivel completo (para el artefacto del Runbook) --
+Cómo se actualizan las reglas:
+   (¿cada cuánto corre suricata-update? ¿quién revisa qué cambió?)
+
+Manejo de falsos positivos:
+   (si esta regla alerta sobre tráfico legítimo, ¿qué se hace?)
+NOTA
+  titulo "Plantilla de triaje creada en $TRIAJE"
+else
+  titulo "Ya tenés tu nota de triaje en $TRIAJE"
+fi
+info "Editala con:  nano $TRIAJE"
+info "El mínimo aceptable son las 3 primeras secciones. Las dos últimas son el nivel completo."

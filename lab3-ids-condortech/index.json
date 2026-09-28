@@ -1,0 +1,15 @@
+{
+  "title": "Cóndor Tech · Lab 3 — El IDS de Cóndor Tech (Suricata offline)",
+  "description": "Leé lo que Suricata vio en tres capturas de la red de Cóndor Tech, cerrá el círculo del MitM de la clase 6 y escribí tu propia regla de detección. Módulo 4 · CIBER13 · Universidad de Montevideo.",
+  "details": {
+    "intro": { "text": "intro.md", "background": "background.sh", "foreground": "foreground.sh" },
+    "steps": [
+      { "title": "Bloque A · Leer lo que el IDS vio (3.1 a 3.3)", "text": "step1.md" },
+      { "title": "Bloque B · Tu propia regla de detección (3.4)", "text": "step2.md" }
+    ],
+    "finish": { "text": "finish.md" },
+    "assets": { "host01": [ { "file": "*", "target": "/opt/ct", "chmod": "+x" } ] }
+  },
+  "backend": { "imageid": "ubuntu" },
+  "interface": { "layout": "ide" }
+}

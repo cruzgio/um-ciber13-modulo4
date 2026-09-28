@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# La regla de referencia del bloque B. Usarla vale media bandera.
+source /opt/ct/lib.sh
+exigir_listo
+titulo "Rescate · la regla de referencia"
+echo "  ${C_NOTA}Usarla vale media bandera. Media bandera vale más que veinte minutos"
+echo "  trabado — pero léela, no la copies a ciegas.${C_N}"
+echo
+cat <<'REF' | sed 's/^/     /'
+alert http any any -> any any (msg:"MI REGLA - User-Agent CondorLoader"; \
+      flow:established,to_server; http.user_agent; \
+      content:"CondorLoader"; classtype:trojan-activity; sid:9100001; rev:1;)
+REF
+echo
+read -r -p "  ¿La escribo en $REGLA_ALUMNO por vos? [s/N] " RESP
+marcar rescate
+if [ "$RESP" = "s" ] || [ "$RESP" = "S" ]; then
+  cat > "$REGLA_ALUMNO" <<'REF'
+alert http any any -> any any (msg:"MI REGLA - User-Agent CondorLoader"; flow:established,to_server; http.user_agent; content:"CondorLoader"; classtype:trojan-activity; sid:9100001; rev:1;)
+REF
+  ok "Escrita. Ahora corré:  ct-check"
+else
+  info "No la escribí. Queda marcado como consultado."
+fi

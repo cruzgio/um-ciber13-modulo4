@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+source /opt/ct/lib.sh
+exigir_listo
+P="${1:-}"
+[ -z "$P" ] && { echo "Uso: ct-buscar <malware.pcap>   (te dice dónde está el eve.json para usar jq)"; exit 2; }
+BASE="$(basename "$P" .pcap)"
+F="$CT_DIR/salidas/$BASE/eve.json"
+[ -f "$F" ] || { mal "No tengo eve.json para «$P»."; exit 1; }
+titulo "eve.json de $BASE.pcap"
+echo "  Archivo:  $F"
+echo
+echo "  Ejemplos de caza con jq:"
+echo "   ${C_B}# a qué IPs salió tráfico HTTP y con qué User-Agent${C_N}"
+echo "   cat /opt/ct/salidas/malware/eve.json | jq -r 'select(.event_type==\"http\") | \"\\(.dest_ip)  \\(.http.hostname)  \\(.http.http_user_agent)\"'"
+echo
+echo "   ${C_B}# las respuestas DNS (nombre -> IP)${C_N}"
+echo "   cat /opt/ct/salidas/malware/eve.json | jq -r 'select(.event_type==\"dns\" and .dns.type==\"answer\") | \"\\(.dns.rrname) -> \\(.dns.answers[]?.rdata)\"'"
+echo
+echo "   ${C_B}# solo las alertas${C_N}"
+echo "   cat /opt/ct/salidas/malware/eve.json | jq -r 'select(.event_type==\"alert\") | \"\\(.alert.signature_id)  \\(.alert.signature)  -> \\(.dest_ip)\"'"
+echo

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+source /opt/ct/lib.sh
+if [ -f "$REGLA_ALUMNO" ]; then
+  titulo "Ya tenés tu regla en $REGLA_ALUMNO"
+  info "Editala con:  nano $REGLA_ALUMNO   (o vim)"
+  info "Cuando quieras probarla:  ct-check"
+  exit 0
+fi
+cat > "$REGLA_ALUMNO" <<'REGLA'
+# Mi regla propia · Lab 3 · Cóndor Tech
+#
+# Objetivo: alertar sobre el User-Agent del loader de la campaña de
+# facturas falsas. El malware usa el User-Agent "CondorLoader".
+#
+# Rellena el content con esa cadena. La estructura ya está lista:
+# alert http any any -> any any (msg:"..."; flow:established,to_server; \
+#        http.user_agent; content:"AQUI_VA_EL_USER_AGENT"; \
+#        classtype:trojan-activity; sid:9100001; rev:1;)
+#
+# Reglas de la casa para tu SID: usa el rango 9100001+ (así no choca
+# con las ET Open ni con las locales del docente, que van en 9000000+).
+
+alert http any any -> any any (msg:"MI REGLA - User-Agent del loader Condor"; flow:established,to_server; http.user_agent; content:"CAMBIAME"; classtype:trojan-activity; sid:9100001; rev:1;)
+REGLA
+titulo "Plantilla creada en $REGLA_ALUMNO"
+info "1) Editala:  nano $REGLA_ALUMNO"
+info "2) Cambia CAMBIAME por el User-Agent que descubriste con ct-buscar."
+info "3) Probala:  ct-check"

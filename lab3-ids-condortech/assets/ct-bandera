@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+source /opt/ct/lib.sh
+case "${1:-}" in
+ 3.1)  R=$(norm "$2"); if [ "$R" = "2010935" ]; then bandera "$CT_FLAG_31_MIN" "$CT_RETO_31_MIN"
+        else mal "No. Corré ct-alertas escaneo.pcap y mirá el SID de la regla ET SCAN contra el 1433."; fi ;;
+ 3.1c) R=$(norm "$2"); if [ "$R" = "192.168.20.10:1433" ]; then bandera "$CT_FLAG_31_FULL" "$CT_RETO_31_FULL"
+        else mal "No. El fast.log solo canta un puerto. Mirá el pcap: ¿a qué activo:puerto volvió el atacante una y otra vez? Pista: ct-pista 3.1c"; fi ;;
+ 3.2)  R=$(norm "$2"); if [ "$R" = "9000001" ]; then bandera "$CT_FLAG_32_MIN" "$CT_RETO_32_MIN"
+        else mal "No. Es el SID de la única alerta sobre mitm_clase6.pcap. Corré ct-alertas mitm_clase6.pcap."; fi ;;
+ 3.2c) R=$(norm "$2"); if [ "$R" = "02:00:00:de:ad:66" ]; then bandera "$CT_FLAG_32_FULL" "$CT_RETO_32_FULL"
+        else mal "No. Suricata NO reportó el ARP spoofing. Sacá la MAC suplantada del pcap con tshark. Pista: ct-pista 3.2c"; fi ;;
+ 3.3)  R=$(norm "$2"); if [ "$R" = "203.0.113.66" ]; then bandera "$CT_FLAG_33_MIN" "$CT_RETO_33_MIN"
+        else mal "No. Es la IP a la que el equipo infectado hace beacon. ct-buscar malware.pcap y jq sobre el HTTP."; fi ;;
+ 3.3c) R=$(echo "$2" | tr 'A-Z' 'a-z' | tr -d ' '); if [ "$R" = "cdn-updates-pool.top" ]; then bandera "$CT_FLAG_33_FULL" "$CT_RETO_33_FULL"
+        else mal "No. Es el dominio que el equipo resolvió justo antes de llamar al C2. jq sobre las respuestas DNS. Pista: ct-pista 3.3c"; fi ;;
+ *) cat <<TXT
+  Uso: ct-bandera <reto> <tu-respuesta>
+
+  Mínimo (leer la alerta):        Completo (trabajo de analista):
+    3.1   SID del escaneo           3.1c  activo:puerto que golpeó de verdad
+    3.2   SID que canta el MitM     3.2c  la MAC que el IDS no vio (ARP)
+    3.3   IP del C2                 3.3c  el dominio malicioso (jq DNS)
+
+  El 3.4 (regla propia) no va por acá: se verifica con ct-check.
+TXT
+ ;;
+esac

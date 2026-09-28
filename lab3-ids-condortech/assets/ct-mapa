@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+cat <<'MAPA'
+  ── El puesto de detección de Cóndor Tech ──
+
+  Sos analista del SOC. Tenés tres capturas de la red y un Suricata con
+  las reglas ET Open ya cargadas. Cada checkpoint tiene DOS niveles:
+     MÍNIMO   = leer la alerta que el IDS ya te dio.
+     COMPLETO = lo que hace un analista de verdad: triar, y encontrar
+                lo que el IDS NO te dio (mirar el pcap, cazar con jq).
+
+  /opt/ct/pcaps/
+     escaneo.pcap        alguien barrió la red desde afuera esta mañana
+     mitm_clase6.pcap    la MISMA captura que investigaste a mano en la clase 6
+     malware.pcap        la "factura" que abrió contabilidad hizo algo raro
+
+  Herramientas:
+     ct-alertas <pcap>    las alertas que Suricata ya sacó de esa captura
+     ct-buscar <pcap>     dónde está el eve.json y ejemplos de jq
+     ct-bandera <n> <r>   comprueba una respuesta (3.1/3.1c/3.2/3.2c/3.3/3.3c)
+     ct-pista <n>         una pista para un nivel completo (aquí no cuesta)
+     ct-mi-regla          crea la plantilla de tu regla en /root/mi-regla.rules
+     ct-check             corre TU regla sobre malware.pcap y verifica que dispara
+     ct-triaje            plantilla de la nota de triaje (nivel completo del 3.4)
+     ct-rescate           la regla de referencia, si te atascás (media bandera)
+     ct-banderas          recap de lo que ya capturaste
+
+  Empezá por:  ct-alertas escaneo.pcap
+MAPA

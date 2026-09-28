@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+source /opt/ct/lib.sh
+case "${1:-}" in
+ 3.1c) echo "  El fast.log alerta por 1433, pero el escaneo tocó ~20 puertos del vpn-gw (192.168.10.5)."
+       echo "  El atacante encontró UN servicio abierto donde no debía y volvió a golpearlo varias veces."
+       echo "  Contá los SYN por destino:  tshark -r /opt/ct/pcaps/escaneo.pcap -Y 'tcp.flags.syn==1 && tcp.flags.ack==0' -T fields -e ip.dst -e tcp.dstport | sort | uniq -c | sort -rn"
+       echo "  Respondé como  ip:puerto  (ej. 10.0.0.5:22)." ;;
+ 3.2c) echo "  Suricata no inspecciona ARP: el envenenamiento es su punto ciego. La MAC suplantada solo está en el pcap."
+       echo "  tshark -r /opt/ct/pcaps/mitm_clase6.pcap -Y 'arp.duplicate-address-detected' -T fields -e arp.src.hw_mac | sort -u"
+       echo "  Es la MAC que dice ser el gateway 192.168.30.1 y no es la real." ;;
+ 3.3c) echo "  Antes de llamar al C2 por IP, el equipo resolvió un dominio por DNS."
+       echo "  cat /opt/ct/salidas/malware/eve.json | jq -r 'select(.event_type==\"dns\" and .dns.type==\"answer\") | \"\\(.dns.rrname) -> \\(.dns.answers[]?.rdata)\"' | sort -u"
+       echo "  El dominio que resuelve a la IP del C2 (203.0.113.66) es la respuesta." ;;
+ *) echo "  Uso: ct-pista <3.1c|3.2c|3.3c>   (pistas de los niveles completos)" ;;
+esac

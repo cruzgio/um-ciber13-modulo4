@@ -1,0 +1,15 @@
+# ─────────────────────────────────────────────────────────────────────────
+#  Reglas locales de Cóndor Tech · Lab 3 · Módulo 4 CIBER13
+#  Se cargan ADEMÁS de ET Open. SID propios en el rango 9000000+.
+# ─────────────────────────────────────────────────────────────────────────
+
+# CT-1 · Credencial en claro en un POST de login (el MitM de la clase 6).
+#   Las reglas ET genéricas buscan "pass="; el login de Cóndor Tech usa "clave="
+#   (español), así que hay que escribir la nuestra. Esta es la alerta que
+#   habría cantado en segundos lo que la clase 6 investigó a mano.
+alert http any any -> any any (msg:"CT LOCAL Credencial en claro (clave=) en POST de login Condor Tech"; flow:established,to_server; http.method; content:"POST"; http.request_body; content:"clave="; classtype:policy-violation; sid:9000001; rev:1;)
+
+# CT-2 · User-Agent del loader de la campaña de facturas falsas (plantilla del CP3).
+#   Es el ejemplo que el estudiante replica para su "regla propia": alertar por
+#   un User-Agent conocido-malo. Cambia el content por el UA que te toque.
+alert http any any -> any any (msg:"CT LOCAL User-Agent sospechoso CondorLoader (malware factura falsa)"; flow:established,to_server; http.user_agent; content:"CondorLoader"; classtype:trojan-activity; sid:9000002; rev:1;)

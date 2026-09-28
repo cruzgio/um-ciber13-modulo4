@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+source /opt/ct/lib.sh
+exigir_listo
+P="${1:-}"
+[ -z "$P" ] && { echo "Uso: ct-alertas <escaneo.pcap|mitm_clase6.pcap|malware.pcap>"; exit 2; }
+BASE="$(basename "$P" .pcap)"
+F="$CT_DIR/salidas/$BASE/fast.log"
+if [ ! -f "$F" ]; then mal "No tengo alertas para «$P». Nombres válidos: escaneo.pcap, mitm_clase6.pcap, malware.pcap"; exit 1; fi
+titulo "Alertas de Suricata sobre $BASE.pcap"
+if [ ! -s "$F" ]; then
+  info "Suricata NO generó ninguna alerta sobre esta captura con ET Open."
+  info "Eso también es un hallazgo: ¿por qué? ¿qué regla faltaría?"
+else
+  # muestra SID, mensaje e IPs, sin repetir líneas idénticas
+  sed -E 's/\[Classification[^]]*\] //; s/\[Priority: [0-9]+\] //' "$F" \
+    | sed -E 's/\[\*\*\]/|/g' | awk -F'|' '{print $2" |"$3}' | sort | uniq -c | sed 's/^/   /'
+fi
+echo
+info "El número entre corchetes tipo [1:XXXXXXX:1] es el SID de la regla."
