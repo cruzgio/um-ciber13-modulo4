@@ -1,0 +1,7 @@
+# Reglas de la demo en vivo del docente (clase 7). SID 99xxxxx: solo demo.
+# 1) Inyección SQL: ET Open no la canta; la escribimos nosotros.
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"CT DEMO Inyeccion SQL (UNION SELECT) en la URL"; flow:established,to_server; http.uri; content:"union"; nocase; content:"select"; nocase; distance:0; classtype:web-application-attack; sid:9900001; rev:1;)
+# 2) Panel /admin, versión 1: dispara también con el admin interno (falso positivo).
+#alert http any any -> $HOME_NET any (msg:"CT DEMO Acceso al panel /admin"; flow:established,to_server; http.uri; content:"/admin"; startswith; classtype:policy-violation; sid:9900002; rev:1;)
+# 2) Panel /admin, versión 2: solo desde Internet.
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"CT DEMO Acceso al panel /admin desde Internet"; flow:established,to_server; http.uri; content:"/admin"; startswith; classtype:policy-violation; sid:9900002; rev:2;)
