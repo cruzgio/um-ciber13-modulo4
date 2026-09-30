@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# ct-estado — semáforo de los 8 controles, sin banderas.
+exec /usr/local/bin/ct-check estado

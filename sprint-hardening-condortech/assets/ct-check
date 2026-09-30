@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# ct-check 1|2|3 — Sprint de remediación de Cóndor Tech (Clase 8)
+# Bloque A = checkpoints 1 y 2 · Bloque B = checkpoint 3.
+# Mínimo aceptable y nivel completo dan banderas distintas (el completo SUMA, no reemplaza).
+# Si usaste ct-rescate en un checkpoint, ese checkpoint entrega la bandera de rescate.
+set -u
+SHADOW="${CT_SHADOW:-/etc/shadow}"; SSHD="${CT_SSHD:-/etc/ssh/sshd_config}"
+SUDOERS_D="${CT_SUDOERS_D:-/etc/sudoers.d}"; PWQ="${CT_PWQ:-/etc/security/pwquality.conf}"
+PAM="${CT_PAM:-/etc/pam.d/common-auth}"; WWFILE="${CT_WWFILE:-/opt/app/config/backup.sh}"
+ST="${CT_STATE:-/opt/checker}"; REPORT="${CT_LYNIS_REPORT:-/var/log/lynis-report.dat}"
+R=$'\e[31m'; G=$'\e[32m'; Y=$'\e[33m'; B=$'\e[1m'; N=$'\e[0m'
+ok(){ printf "  %s[OK]%s  %s\n" "$G" "$N" "$1"; }
+no(){ printf "  %s[X]%s   %s\n" "$R" "$N" "$1"; }
+flag(){ printf "  %s%-22s%s %s%s%s\n" "$G" "$1" "$N" "$B" "$2" "$N"; }
+mode(){ local m; m=$(stat -c '%a' "$1" 2>/dev/null) || m=$(stat -f '%Lp' "$1" 2>/dev/null); echo "${m:-777}"; }
+
+v1(){ local f; f=$(awk -F: '$1=="soporte"{print $2}' "$SHADOW" 2>/dev/null); case "$f" in '!'*|'*'*) return 0;; *) return 1;; esac; }
+v2(){ ! grep -RhiE 'NOPASSWD:[[:space:]]*ALL' "$SUDOERS_D" 2>/dev/null | grep -qvE '^[[:space:]]*#' && \
+      ! grep -RhE '^[[:space:]]*soporte[[:space:]]' "$SUDOERS_D" 2>/dev/null | grep -q .; }
+v3(){ local m; m=$(grep -E '^[[:space:]]*minlen[[:space:]]*=' "$PWQ" 2>/dev/null | tail -1 | grep -oE '[0-9]+'); [ -n "$m" ] && [ "$m" -ge 14 ]; }
+v4(){ grep -qE '^[^#]*pam_faillock\.so' "$PAM" 2>/dev/null; }
+v5(){ if [ -n "${CT_SVC_LISTEN:-}" ]; then [ "$CT_SVC_LISTEN" = 0 ]; else ! ss -H -tln 2>/dev/null | grep -qE ':2323[[:space:]]'; fi; }
+v6(){ local m; m=$(mode "$SHADOW"); [ $((10#$m % 10)) -eq 0 ] && [ $((10#$m)) -le 640 ]; }
+v7(){ [ ! -e "$WWFILE" ] && return 0; local m; m=$(mode "$WWFILE"); [ $(( (10#$m % 10) & 2 )) -eq 0 ]; }
+v8(){ local pr pe; pr=$(grep -iE '^[[:space:]]*PermitRootLogin' "$SSHD" 2>/dev/null | tail -1 | awk '{print tolower($2)}')
+      pe=$(grep -iE '^[[:space:]]*PermitEmptyPasswords' "$SSHD" 2>/dev/null | tail -1 | awk '{print tolower($2)}')
+      case "$pr" in no|prohibit-password) [ "$pe" = no ];; *) return 1;; esac; }
+t(){ if "$1"; then ok "$2"; return 0; else no "$2"; return 1; fi; }
+rescued(){ [ -f "$ST/rescate_$1" ]; }
+
+cp1(){ printf "%s== Bloque A · Checkpoint 1 · Cuentas y accesos ==%s\n" "$B" "$N"
+  local m=0 c=0
+  echo " Mínimo aceptable:"; t v1 "V1 cuenta 'soporte' bloqueada (tenía contraseña vacía)" || m=1
+                             t v2 "V2 sudo sin NOPASSWD:ALL y sin privilegios para 'soporte'" || m=1
+  echo " Nivel completo:";   t v3 "V3 política de contraseñas (minlen >= 14 en pwquality.conf)" || c=1
+                             t v4 "V4 bloqueo por intentos fallidos (pam_faillock en common-auth)" || c=1
+  echo; if [ $m -ne 0 ]; then printf "  %sMínimo pendiente. Referencia Rápida o 'ct-rescate 1'.%s\n" "$Y" "$N"; return 1; fi
+  if rescued 1; then flag "8.1 Rescate" "CT{rescate-cuentas-1c5e}"; return 0; fi
+  flag "8.1 Cuentas" "CT{cuentas-endurecidas-4e1a}"
+  [ $c -eq 0 ] && flag "8.1c Cuentas" "CT{pam-exige-y-bloquea-9b2d}" || printf "  %sPara el nivel completo faltan V3/V4.%s\n" "$Y" "$N"; return 0; }
+
+cp2(){ printf "%s== Bloque A · Checkpoint 2 · Superficie y permisos ==%s\n" "$B" "$N"
+  local m=0 c=0
+  echo " Mínimo aceptable:"; t v5 "V5 servicio innecesario condor-legacy (tcp/2323) apagado" || m=1
+                             t v6 "V6 /etc/shadow en 640 o menos, sin lectura para 'otros'" || m=1
+  echo " Nivel completo:";   t v7 "V7 archivo con credencial ya no es escribible por 'otros'" || c=1
+                             t v8 "V8 SSH: PermitRootLogin no y PermitEmptyPasswords no" || c=1
+  echo; if [ $m -ne 0 ]; then printf "  %sMínimo pendiente. Referencia Rápida o 'ct-rescate 2'.%s\n" "$Y" "$N"; return 1; fi
+  if rescued 2; then flag "8.2 Rescate" "CT{rescate-superficie-6d0b}"; return 0; fi
+  flag "8.2 Superficie" "CT{superficie-cerrada-7c9d}"
+  [ $c -eq 0 ] && flag "8.2c Superficie" "CT{ssh-y-secretos-a8f3}" || printf "  %sPara el nivel completo faltan V7/V8.%s\n" "$Y" "$N"; return 0; }
+
+cp3(){ printf "%s== Bloque B · Checkpoint 3 · Medir la mejora ==%s\n" "$B" "$N"
+  if [ -f "$ST/.midiendo" ]; then printf "  %sLa línea base todavía se está calculando (2-3 min desde que arrancó el escenario). Reintenta.%s\n" "$Y" "$N"; return 1; fi
+  local base cur; base=$(cat "$ST/baseline_index" 2>/dev/null); cur=$(grep -E '^hardening_index=' "$REPORT" 2>/dev/null | tail -1 | cut -d= -f2)
+  [ -z "$base" ] && { no "no hay línea base (reinicia el escenario)"; return 1; }
+  [ -z "$cur" ] && { no "no hay auditoría nueva: corre 'sudo lynis audit system --quick'"; return 1; }
+  local d=$((cur-base)); printf "  Índice Lynis: servidor sin remediar = %s  ->  ahora = %s   (delta = %+d)\n" "$base" "$cur" "$d"
+  local all=0; for v in v1 v2 v3 v4 v5 v6 v7 v8; do $v || all=1; done
+  echo " Mínimo aceptable:"; if [ $d -ge 1 ]; then ok "aplicaste sugerencias de Lynis y el índice subió"; else no "el índice no subió: aplica al menos una sugerencia de Lynis (Referencia Rápida) y vuelve a auditar"; return 1; fi
+  local c=0; echo " Nivel completo:"
+  t true_all "los 8 controles del sprint en verde" || c=1
+  if [ $d -ge 3 ]; then ok "delta de al menos +3"; else no "delta de al menos +3 (aplica más sugerencias)"; c=1; fi
+  echo; if rescued 3; then flag "8.3 Rescate" "CT{rescate-medir-5a91}"; return 0; fi
+  flag "8.3 Medir" "CT{delta-lynis-3f60}"
+  [ $c -eq 0 ] && flag "8.3c Medir" "CT{ocho-de-ocho-e27c}"; return 0; }
+true_all(){ for v in v1 v2 v3 v4 v5 v6 v7 v8; do $v || return 1; done; }
+
+case "${1:-}" in estado) n=0; for i in 1 2 3 4 5 6 7 8; do if v$i; then echo "V$i  verde"; n=$((n+1)); else echo "V$i  rojo"; fi; done; echo "$n de 8 controles remediados.";; 1) cp1;; 2) cp2;; 3) cp3;; *) echo "Uso: ct-check 1|2|3   (1 y 2 = Bloque A, 3 = Bloque B)"; exit 2;; esac

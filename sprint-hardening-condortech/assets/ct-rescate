@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# ct-rescate 1|2|3 — muestra los comandos de referencia del checkpoint.
+# Al usarlo, ese checkpoint entrega la bandera de RESCATE (1 punto) en lugar de las de mínimo y completo.
+ST=/opt/checker
+case "${1:-}" in 1|2|3) ;; *) echo "Uso: ct-rescate 1|2|3"; exit 2;; esac
+read -r -p "Si ves el rescate, el checkpoint $1 entregará la bandera de rescate. ¿Continuar? [s/N] " r
+case "$r" in s|S) touch "$ST/rescate_$1";; *) echo "Cancelado."; exit 0;; esac
+case "$1" in
+1) cat <<'T'
+# Checkpoint 1 · Cuentas y accesos
+sudo passwd -l soporte                                   # V1 bloquear la cuenta sin contraseña
+sudo rm /etc/sudoers.d/90-condor                         # V2 quitar el sudo total sin contraseña
+echo 'minlen = 14' | sudo tee -a /etc/security/pwquality.conf        # V3
+sudo sed -i '1i auth required pam_faillock.so preauth silent deny=5 unlock_time=900' /etc/pam.d/common-auth   # V4
+ct-check 1
+T
+;;
+2) cat <<'T'
+# Checkpoint 2 · Superficie y permisos
+sudo systemctl disable --now condor-legacy 2>/dev/null || sudo kill $(ss -H -tlnp 'sport = :2323' | grep -oE 'pid=[0-9]+' | cut -d= -f2 | sort -u) 2>/dev/null   # V5
+sudo chown root:shadow /etc/shadow && sudo chmod 640 /etc/shadow                             # V6
+sudo chmod o-w /opt/app/config/backup.sh                                                     # V7
+sudo sed -i 's/^PermitRootLogin.*/PermitRootLogin no/;s/^PermitEmptyPasswords.*/PermitEmptyPasswords no/' /etc/ssh/sshd_config   # V8
+ct-check 2
+T
+;;
+3) cat <<'T'
+# Checkpoint 3 · Medir: aplicar sugerencias de Lynis (grupo AUTH) y volver a auditar
+sudo sed -i 's/^UMASK.*/UMASK 027/;s/^PASS_MAX_DAYS.*/PASS_MAX_DAYS 365/;s/^PASS_MIN_DAYS.*/PASS_MIN_DAYS 1/' /etc/login.defs
+printf 'SHA_CRYPT_MIN_ROUNDS 5000\nSHA_CRYPT_MAX_ROUNDS 10000\n' | sudo tee -a /etc/login.defs
+echo '* hard core 0' | sudo tee -a /etc/security/limits.conf
+sudo lynis audit system --quick
+grep '^hardening_index=' /var/log/lynis-report.dat
+ct-check 3
+T
+;;
+esac

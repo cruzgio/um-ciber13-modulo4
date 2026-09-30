@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# ct-retomar <bandera del Bloque A> — entra al Bloque B con el mínimo de los checkpoints 1 y 2 ya aplicado.
+# Quien ya lo había hecho no pierde nada: solo se aplica lo que falte del mínimo.
+case "${1:-}" in
+ "CT{cuentas-endurecidas-4e1a}"|"CT{pam-exige-y-bloquea-9b2d}"|"CT{rescate-cuentas-1c5e}"|\
+ "CT{superficie-cerrada-7c9d}"|"CT{ssh-y-secretos-a8f3}"|"CT{rescate-superficie-6d0b}") ;;
+ *) echo "Esa no es una bandera del Bloque A. Si no tienes ninguna: 'ct-rescate 1' y luego 'ct-check 1'."; exit 1;;
+esac
+# Lo que ct-retomar aplica por ti cuenta como rescate de ese checkpoint (bandera de 1 punto).
+c1=0; awk -F: '$1=="soporte"{print $2}' /etc/shadow | grep -qE '^[!*]' || c1=1
+grep -RqiE 'NOPASSWD:[[:space:]]*ALL' /etc/sudoers.d/ 2>/dev/null && c1=1
+c2=0; ss -H -tln | grep -qE ':2323[[:space:]]' && c2=1
+[ $(( $(stat -c '%a' /etc/shadow) % 10 )) -ne 0 ] && c2=1
+[ $c1 -eq 1 ] && touch /opt/checker/rescate_1
+[ $c2 -eq 1 ] && touch /opt/checker/rescate_2
+awk -F: '$1=="soporte"{print $2}' /etc/shadow | grep -qE '^[!*]' || passwd -l soporte >/dev/null
+rm -f /etc/sudoers.d/90-condor
+systemctl disable --now condor-legacy >/dev/null 2>&1 || kill $(ss -H -tlnp 'sport = :2323' | grep -oE 'pid=[0-9]+' | cut -d= -f2 | sort -u) 2>/dev/null || true
+chown root:shadow /etc/shadow; chmod 640 /etc/shadow
+echo "Listo: el mínimo de los checkpoints 1 y 2 quedó aplicado. Sigue con el Bloque B: sudo lynis audit system --quick && ct-check 3"

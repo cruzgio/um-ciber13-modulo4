@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# ct-informe — esqueleto de la Guía de hardening con la evidencia del servidor ya capturada.
+O=~/guia-hardening-condortech.md
+{ echo "# Guía de hardening de servidores de Cóndor Tech (v1)"; echo; echo "Equipo: ____  · Servidor: srv-legacy-01 · Fecha: $(date +%F)"; echo
+  echo "| Control | Remediación aplicada | Control CIS | Evidencia DESPUÉS |"; echo "|---|---|---|---|"
+  echo "| V1 cuenta sin contraseña | ____ | ____ | \`$(sudo awk -F: '$1=="soporte"{print $1":"substr($2,1,1)"..."}' /etc/shadow)\` |"
+  echo "| V2 sudo total | ____ | ____ | \`$(ls /etc/sudoers.d/ | tr '\n' ' ')\` |"
+  echo "| V3 política de contraseñas | ____ | ____ | \`$(grep -E '^minlen' /etc/security/pwquality.conf)\` |"
+  echo "| V4 bloqueo por intentos | ____ | ____ | \`$(grep -c pam_faillock /etc/pam.d/common-auth) líneas pam_faillock\` |"
+  echo "| V5 servicio tcp/2323 | ____ | ____ | \`$(ss -tln | grep -c ':2323') sockets en 2323\` |"
+  echo "| V6 /etc/shadow | ____ | ____ | \`$(stat -c '%a %U:%G' /etc/shadow)\` |"
+  echo "| V7 archivo con credencial | ____ | ____ | \`$(stat -c '%a' /opt/app/config/backup.sh)\` |"
+  echo "| V8 SSH | ____ | ____ | \`$(grep -E '^(PermitRootLogin|PermitEmptyPasswords)' /etc/ssh/sshd_config | tr '\n' ' ')\` |"
+  echo; echo "Índice Lynis: sin remediar = $(cat /opt/checker/baseline_index 2>/dev/null) · ahora = $(grep '^hardening_index=' /var/log/lynis-report.dat 2>/dev/null | cut -d= -f2)"
+} > "$O"; echo "Esqueleto creado: $O  (cópialo antes de que expire la sesión)"; echo; cat "$O"

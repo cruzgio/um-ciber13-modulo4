@@ -1,0 +1,14 @@
+{
+  "title": "Sprint de remediación · Cóndor Tech",
+  "description": "Clase 8 · Endurece srv-legacy-01 (el servidor del Lab 1) y demuéstralo con banderas y con Lynis.",
+  "details": {
+    "intro": { "text": "intro.md", "background": "background.sh" },
+    "steps": [
+      { "title": "Bloque A · Cuentas, superficie y permisos", "text": "step1.md" },
+      { "title": "Bloque B · Medir la mejora", "text": "step2.md" }
+    ],
+    "finish": { "text": "finish.md" },
+    "assets": { "host01": [ { "file": "*", "target": "/root/assets" } ] }
+  },
+  "backend": { "imageid": "ubuntu" }
+}
