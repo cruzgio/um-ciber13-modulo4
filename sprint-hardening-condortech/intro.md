@@ -12,5 +12,5 @@ El tablero de riesgos del Lab 1 sigue en rojo. Hoy tu equipo **endurece el mismo
 - Cada checkpoint tiene **mínimo aceptable** y **nivel completo**; cada nivel da su propia bandera.
 - `ct-estado` muestra los 8 controles en verde o rojo.
 - Si te trabas: `ct-rescate <n>` (el checkpoint entrega la bandera de rescate, 1 punto).
-- Si no cerraste el Bloque A: `ct-retomar <bandera del Bloque A>` y entras al B con el mínimo aplicado.
+- Después de la pausa abrirás una sesión nueva: `ct-retomar <tus banderas del Bloque A>` repone lo que ya ganaste.
 - Si algo se rompe, reinicia el escenario: el servidor es ganado, no mascota.

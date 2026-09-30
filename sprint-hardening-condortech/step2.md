@@ -1,6 +1,8 @@
 # Bloque B · Medir la mejora
 
-**Si no cerraste el Bloque A:** `ct-retomar <tu bandera del Bloque A>` antes de seguir.
+**Sesión nueva:** después de la pausa el servidor vuelve a estar sin remediar. Espera 2–3 minutos y ejecuta `ct-retomar` con **todas** tus banderas del Bloque A, por ejemplo:
+`ct-retomar CT{...} CT{...}`
+Con cualquier bandera repones el mínimo; con 8.1c y 8.2c repones también el completo. Si no tienes ninguna: `ct-rescate 1` y `ct-check 1`.
 
 Lynis mide lo que sabe medir. Por eso, además de los 8 controles, aplica **sugerencias de Lynis del grupo AUTH** y vuelve a auditar.
 

@@ -21,3 +21,7 @@ Antes de editar sudoers: usa `visudo -f <archivo>` o borra el archivo; un sudoer
 `ct-check 2`
 
 Anota el comando de evidencia de cada control: lo necesitas para la Guía de hardening.
+
+**Antes de la pausa:** corre `ct-informe` y copia la salida (y tus banderas). La sesión dura 60 minutos; después de la pausa abrirás una nueva.
+
+No reinicies el servicio SSH: `ct-check` verifica la configuración del archivo.

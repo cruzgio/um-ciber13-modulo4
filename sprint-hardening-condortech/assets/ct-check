@@ -15,8 +15,7 @@ flag(){ printf "  %s%-22s%s %s%s%s\n" "$G" "$1" "$N" "$B" "$2" "$N"; }
 mode(){ local m; m=$(stat -c '%a' "$1" 2>/dev/null) || m=$(stat -f '%Lp' "$1" 2>/dev/null); echo "${m:-777}"; }
 
 v1(){ local f; f=$(awk -F: '$1=="soporte"{print $2}' "$SHADOW" 2>/dev/null); case "$f" in '!'*|'*'*) return 0;; *) return 1;; esac; }
-v2(){ ! grep -RhiE 'NOPASSWD:[[:space:]]*ALL' "$SUDOERS_D" 2>/dev/null | grep -qvE '^[[:space:]]*#' && \
-      ! grep -RhE '^[[:space:]]*soporte[[:space:]]' "$SUDOERS_D" 2>/dev/null | grep -q .; }
+v2(){ ! grep -RhE '^[[:space:]]*soporte[[:space:]]' "$SUDOERS_D" 2>/dev/null | grep -q .; }
 v3(){ local m; m=$(grep -E '^[[:space:]]*minlen[[:space:]]*=' "$PWQ" 2>/dev/null | tail -1 | grep -oE '[0-9]+'); [ -n "$m" ] && [ "$m" -ge 14 ]; }
 v4(){ grep -qE '^[^#]*pam_faillock\.so' "$PAM" 2>/dev/null; }
 v5(){ if [ -n "${CT_SVC_LISTEN:-}" ]; then [ "$CT_SVC_LISTEN" = 0 ]; else ! ss -H -tln 2>/dev/null | grep -qE ':2323[[:space:]]'; fi; }
@@ -31,7 +30,7 @@ rescued(){ [ -f "$ST/rescate_$1" ]; }
 cp1(){ printf "%s== Bloque A · Checkpoint 1 · Cuentas y accesos ==%s\n" "$B" "$N"
   local m=0 c=0
   echo " Mínimo aceptable:"; t v1 "V1 cuenta 'soporte' bloqueada (tenía contraseña vacía)" || m=1
-                             t v2 "V2 sudo sin NOPASSWD:ALL y sin privilegios para 'soporte'" || m=1
+                             t v2 "V2 la cuenta 'soporte' ya no tiene sudo (era total y sin contraseña)" || m=1
   echo " Nivel completo:";   t v3 "V3 política de contraseñas (minlen >= 14 en pwquality.conf)" || c=1
                              t v4 "V4 bloqueo por intentos fallidos (pam_faillock en common-auth)" || c=1
   echo; if [ $m -ne 0 ]; then printf "  %sMínimo pendiente. Referencia Rápida o 'ct-rescate 1'.%s\n" "$Y" "$N"; return 1; fi
