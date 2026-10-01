@@ -1,0 +1,12 @@
+{
+  "title": "Demo — Parchado seguro (regreSSHion) · Cóndor Tech",
+  "description": "Módulo 4 · demo docente. Un paquete plantado en versión vulnerable y un repositorio apt LOCAL para mostrar un apt upgrade real y seguro, sin tocar el OpenSSH del sistema.",
+  "details": {
+    "intro": { "text": "intro.md", "background": "background.sh" },
+    "steps": [
+      { "title": "Parchar de verdad: detectar → priorizar → parchar → verificar", "text": "step1/text.md" }
+    ],
+    "finish": { "text": "finish.md" }
+  },
+  "backend": { "imageid": "ubuntu" }
+}
