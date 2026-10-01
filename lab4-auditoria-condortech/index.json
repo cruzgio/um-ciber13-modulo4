@@ -1,0 +1,17 @@
+{
+  "title": "Lab 4 — La cuenta que nadie creó (auditd + cacería en logs de Windows)",
+  "description": "Módulo 4 · Cóndor Tech S.A.S. · Incidente #3. Bloque A: trazabilidad con auditd. Bloque B: cacería en un .evtx de un ataque real.",
+  "details": {
+    "intro": { "text": "intro.md", "background": "background.sh" },
+    "steps": [
+      { "title": "Bloque A · 1. Encender la auditoría", "text": "step1/text.md" },
+      { "title": "Bloque A · 2. Cazar al atacante en auditd", "text": "step2/text.md" },
+      { "title": "Bloque B · Cacería en el .evtx real", "text": "step3/text.md" }
+    ],
+    "finish": { "text": "finish.md" },
+    "assets": {
+      "host01": [ { "file": "evtx/*", "target": "/root/evtx/" } ]
+    }
+  },
+  "backend": { "imageid": "ubuntu" }
+}

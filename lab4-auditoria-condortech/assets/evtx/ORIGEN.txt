@@ -1,0 +1,5 @@
+Muestras reales del repositorio EVTX-ATTACK-SAMPLES (Samir Bousseaden), licencia GPL-3.0
+https://github.com/sbousseaden/EVTX-ATTACK-SAMPLES (commit 4ceed2f)
+caso_tunel.evtx  = Command and Control/DE_RDP_Tunnel_5156.evtx
+caso_cuenta.evtx = Defense Evasion/DE_Fake_ComputerAccount_4720.evtx
+caso_grupo.evtx  = Persistence/Network_Service_Guest_added_to_admins_4732.evtx
