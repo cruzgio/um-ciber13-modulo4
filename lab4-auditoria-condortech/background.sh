@@ -252,9 +252,10 @@ case $id in
   5156) jq -r "select(.Event.System.EventID==$id) | .Event | \"\(.System.TimeCreated[\"#attributes\"].SystemTime)  app=\(.EventData.Application)  \(.EventData.SourceAddress):\(.EventData.SourcePort) -> \(.EventData.DestAddress):\(.EventData.DestPort)  proto=\(.EventData.Protocol)\"" "$f" | sed 's/\\device\\harddiskvolume1//';;
   4720) jq -r "select(.Event.System.EventID==$id) | .Event | \"\(.System.TimeCreated[\"#attributes\"].SystemTime)  creada=[\(.EventData.TargetUserName)]  por=\(.EventData.SubjectUserName)  SID=\(.EventData.TargetSid)\"" "$f";;
   4732) jq -r "select(.Event.System.EventID==$id) | .Event | \"\(.System.TimeCreated[\"#attributes\"].SystemTime)  miembroSID=\(.EventData.MemberSid)  grupo=\(.EventData.TargetUserName)  por=\(.EventData.SubjectUserName)\"" "$f";;
-  1102) jq -r "select(.Event.System.EventID==$id) | .Event | \"\(.System.TimeCreated[\"#attributes\"].SystemTime)  LOG BORRADO por=\(.UserData.LogFileCleared.SubjectUserName)\"" "$f";;
+  1102) echo "Registro de seguridad borrado. En el 1102 el autor NO está en EventData sino en UserData: leé el bloque y encontrá el campo del usuario."; jq -c "select(.Event.System.EventID==$id) | .Event.UserData.LogFileCleared | del(.[\"#attributes\"])" "$f";;
   *) jq -c "select(.Event.System.EventID==$id) | {t:.Event.System.TimeCreated[\"#attributes\"].SystemTime, datos:.Event.EventData}" "$f";;
 esac
+echo "(lo mismo a mano, para aprenderlo:  jq -c 'select(.Event.System.EventID==$id) | .Event'  $f )"
 EOF
 
 # --- ct-buscar
@@ -272,7 +273,7 @@ grep -i -- "$2" "$f" | jq -r '.Event as $e | ($e.EventData // {}) as $d | [
   (if $d.Application then "app=\($d.Application|sub("\\\\device\\\\harddiskvolume1";"")) \($d.SourceAddress):\($d.SourcePort) -> \($d.DestAddress):\($d.DestPort)" else empty end),
   (if $e.UserData.LogFileCleared then "LOG BORRADO por=\($e.UserData.LogFileCleared.SubjectUserName)" else empty end)
   ] | join("  ")'
-echo "(detalle crudo: grep -i \"$2\" $f | jq .)"
+echo "(lo mismo a mano, para aprenderlo: grep -i \"$2\" $f | jq .)"
 EOF
 
 # --- ct-responder (banderas)
