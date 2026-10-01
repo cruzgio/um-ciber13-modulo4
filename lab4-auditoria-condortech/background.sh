@@ -120,8 +120,9 @@ cat > /usr/local/bin/ct-reglas <<'EOF'
 . /usr/local/lib/ct/comun.sh
 R=/etc/audit/rules.d/condortech.rules
 if [ -f "$R" ] && [ "$1" != "--forzar" ]; then
-  echo "El archivo $R ya existe. Editalo con: nano $R   (o regeneralo con ct-reglas --forzar)"; exit 0
-fi
+  echo "El archivo $R ya existe (no lo piso). Para regenerarlo desde cero: ct-reglas --forzar"
+  echo "Cargo las reglas que ya tenés escritas..."
+else
 cat > "$R" <<'RULES'
 ## Política de auditoría de Cóndor Tech · srv-erp · v1
 ## Cada regla lleva una clave (-k) para poder buscarla: ausearch -k <clave> -i
@@ -149,10 +150,22 @@ cat > "$R" <<'RULES'
 # -w /root/.ssh  -p wa -k propia
 RULES
 ok "Plantilla escrita en $R"
-echo "Siguiente: cargarla y encender auditd."
-echo "  systemctl enable --now auditd   # (o: service auditd start)"
-echo "  augenrules --load               # carga /etc/audit/rules.d/*.rules"
-echo "  auditctl -l                     # deben verse las reglas con sus claves"
+fi
+# Encender auditd si está apagado
+if ! auditctl -s 2>/dev/null | grep -q "^pid [1-9]"; then
+  systemctl enable --now auditd 2>/dev/null || service auditd start 2>/dev/null
+  sleep 1
+fi
+# Cargar las reglas directo al kernel (evita el caché de augenrules) y persistir
+auditctl -R "$R" >/dev/null 2>&1
+augenrules --load >/dev/null 2>&1
+if auditctl -l 2>/dev/null | grep -q "identidad"; then
+  ok "Reglas cargadas en el kernel."
+  echo "  Verificá:  auditctl -l"
+  echo "  Siguiente: ct-simular   → hacé volver al atacante, ahora que ya registrás"
+else
+  no "No se pudieron cargar. Probá a mano: auditctl -R $R"
+fi
 EOF
 
 # --- atacante (replay) — corre con auid=mrojas para simular una sesión real de esa cuenta
@@ -179,10 +192,10 @@ chmod +x /usr/local/lib/ct/atacante.sh
 cat > /usr/local/bin/ct-simular <<'EOF'
 #!/bin/bash
 . /usr/local/lib/ct/comun.sh
-if ! auditctl -s 2>/dev/null | grep -q "^pid [1-9]"; then no "auditd está APAGADO. Si simulás ahora, el atacante no deja rastro. Primero: systemctl enable --now auditd"; exit 1; fi
-if ! auditctl -l 2>/dev/null | grep -q "identidad"; then no "No hay reglas cargadas con la clave 'identidad'. Primero: ct-reglas y augenrules --load"; exit 1; fi
+if ! auditctl -s 2>/dev/null | grep -q "^pid [1-9]"; then no "auditd está APAGADO. Si simulás ahora, el atacante no deja rastro. Primero: ct-reglas (enciende auditd y carga las reglas)"; exit 1; fi
+if ! auditctl -l 2>/dev/null | grep -q "identidad"; then no "No hay reglas cargadas con la clave 'identidad'. Primero: ct-reglas"; exit 1; fi
 if [ -f /root/.ct/simulado ] && [ "$1" != "--otra-vez" ]; then echo "El atacante ya volvió una vez. Buscalo: ausearch -k identidad -i   (o repetí con ct-simular --otra-vez)"; exit 0; fi
-echo -e "${A}03:14 — alguien entra con la cuenta de mrojas y escala a root...${N}"
+echo -e "${A}03:14 — alguien entra con una cuenta comprometida y escala a root...${N}"
 # Intento 1: escribir loginuid directo (funciona si el shell no tiene auid fijado)
 if bash -c 'echo 1001 > /proc/self/loginuid' 2>/dev/null; then
   bash /usr/local/lib/ct/atacante.sh
@@ -329,11 +342,9 @@ A)
   touch /root/.ct/rescate_A
   ti "Rescate del bloque A (la bandera que obtengas ahora vale como «A Rescate»)"
   cat <<'R'
-1. Escribir la política y encender la auditoría:
+1. Escribir la política y encender la auditoría (ct-reglas hace las dos cosas y carga las reglas):
      ct-reglas
-     systemctl enable --now auditd      # si falla: service auditd start
-     augenrules --load
-     auditctl -l                        # ver las reglas con -k identidad / sudoers / privilegiado
+     auditctl -l                        # ver las reglas con las claves identidad / sudoers / privilegiado
 2. Hacer volver al atacante:
      ct-simular
 3. Buscar quién tocó /etc/shadow y /etc/sudoers.d (campo AUID = humano real detrás del sudo):
@@ -371,8 +382,18 @@ cat > /usr/local/bin/ct-check <<'EOF'
 . /usr/local/lib/ct/comun.sh
 ti "Estado del bloque A"
 auditctl -s 2>/dev/null | grep -q "^pid [1-9]" && ok "auditd activo" || no "auditd apagado → systemctl enable --now auditd"
-for k in identidad sudoers privilegiado; do auditctl -l 2>/dev/null | grep -q -- "-k $k" && ok "regla con clave $k cargada" || no "falta la clave $k → ct-reglas + augenrules --load"; done
-auditctl -l 2>/dev/null | grep -q -- "-k propia" && ok "regla propia (-k propia) cargada — nivel completo del artefacto" || echo "  [..] sin regla propia todavía (opcional para el mínimo; necesaria para el artefacto completo)"
+for k in identidad sudoers privilegiado; do auditctl -l 2>/dev/null | grep -qE -- "(-k $k|key=$k)" && ok "regla con clave $k cargada" || no "falta la clave $k → ct-reglas"; done
+# Regla propia (nivel completo del artefacto): la clave sale como -k o key=
+P=$(auditctl -l 2>/dev/null | grep -E -- "(-k propia|key=propia)")
+if [ -z "$P" ]; then
+  echo "  [..] sin regla propia todavía (necesaria para el nivel completo del artefacto)"
+elif echo "$P" | grep -qE "(/etc/cron\.d|/root/\.ssh) +-p wa +-k propia"; then
+  echo "  [..] tu regla propia es uno de los ejemplos sin cambiar: escribí una distinta y justificá qué amenaza cubre"
+elif ausearch -k propia 2>/dev/null | grep -q "type="; then
+  ok "regla propia cargada y con eventos — nivel completo del artefacto"
+else
+  echo "  [..] regla propia cargada, pero sin eventos: provocala para dejar evidencia (ausearch -k propia -i)"
+fi
 [ -f /root/.ct/simulado ] && ok "el atacante ya volvió (ct-simular)" || no "todavía no corriste ct-simular"
 ti "Estado del bloque B"
 [ -x /usr/local/bin/evtx_dump ] && [ ! -s /root/evtx/caso_tunel.jsonl ] && /usr/local/lib/ct/convertir.sh 2>/dev/null

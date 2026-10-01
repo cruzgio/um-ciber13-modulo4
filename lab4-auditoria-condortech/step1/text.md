@@ -3,29 +3,27 @@
 ## Innegociable
 `auditd` registra **quién** (auid = el humano que inició sesión), **qué** (syscall / archivo) y **cuándo**. `sudo` no lo engaña: aunque el proceso corra como root, `auid` sigue siendo la persona.
 
-## 1. Escribir la política de auditoría de Cóndor Tech
+## 1. Escribir y cargar la política de auditoría de Cóndor Tech
 
 ```
 ct-reglas
 ```{{exec}}
 
-Leé la plantilla. Tiene tres claves: `identidad`, `sudoers`, `privilegiado`.
+`ct-reglas` escribe la política, enciende `auditd` y carga las reglas en el kernel de una. Por detrás hace lo mismo que harías a mano: `systemctl enable --now auditd` y `auditctl -R /etc/audit/rules.d/condortech.rules`.
+
+Leé la plantilla que escribió. Tiene tres claves: `identidad`, `sudoers`, `privilegiado`.
 
 ```
 cat /etc/audit/rules.d/condortech.rules
 ```{{exec}}
 
-## 2. Encender auditd y cargar las reglas
+## 2. Verificar que las reglas están activas
 
 ```
-systemctl enable --now auditd
-augenrules --load
 auditctl -l
 ```{{exec}}
 
-> Si `systemctl` falla en este entorno: `service auditd start` y después `augenrules --load`.
-
-Deben aparecer las reglas con sus claves `-k`. Verificá el estado:
+Deben aparecer las reglas con sus claves. Un detalle que confunde: las reglas de archivo (`-w`) muestran la clave como `-k identidad` / `-k sudoers`, pero las de syscall la muestran como `key=privilegiado`. Es la misma clave: `auditctl` la imprime distinto según el tipo de regla. Revisá el estado general:
 
 ```
 ct-check
@@ -33,11 +31,12 @@ ct-check
 
 ## 3. Nivel completo del artefacto (opcional ahora, necesario para el Runbook)
 
-Agregá al final de `/etc/audit/rules.d/condortech.rules` **una regla tuya** con la clave `-k propia` (por ejemplo, vigilar `/etc/cron.d` o `/root/.ssh`), y volvé a cargar:
+Agregá al final de `/etc/audit/rules.d/condortech.rules` **una regla tuya** con la clave `-k propia` —distinta de los ejemplos comentados— que cubra una amenaza que las tres anteriores no ven (borrado de archivos, montaje de dispositivos, acceso a `/etc/ssh`…). Después recargá con `ct-reglas` (respeta tu edición) y dejá que dispare para tener evidencia:
 
 ```
 nano /etc/audit/rules.d/condortech.rules
-augenrules --load && auditctl -l | grep propia
+ct-reglas
+auditctl -l | grep -i propia
 ```
 
-Cuando `ct-check` muestre todo en verde para el bloque A, pasá al siguiente paso.
+Cuando `ct-check` muestre el bloque A en verde, pasá al siguiente paso.
