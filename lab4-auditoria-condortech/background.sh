@@ -47,11 +47,25 @@ for i in 1 2 3; do
 done
 
 # ---------- 5. Esperar los .evtx (assets) y pre-convertirlos a JSON ----------
-for i in $(seq 1 60); do [ -f /root/evtx/caso_tunel.evtx ] && break; sleep 1; done
-for f in /root/evtx/*.evtx; do
-  [ -f "$f" ] || continue
-  /usr/local/bin/evtx_dump -o jsonl "$f" > "${f%.evtx}.jsonl" 2>/dev/null
+# Helper reutilizable: aplana cualquier .evtx anidado (los assets a veces
+# llegan en /root/evtx/evtx/) y convierte a .jsonl solo lo que falte.
+cat > /usr/local/lib/ct/convertir.sh <<'EOF'
+#!/bin/bash
+# Aplanar .evtx que hayan quedado en subcarpetas (p.ej. /root/evtx/evtx/)
+find /root/evtx -mindepth 2 -name '*.evtx' -exec mv -n {} /root/evtx/ \; 2>/dev/null
+# Limpiar basura de globs sin expandir
+rm -f '/root/evtx/*.jsonl' 2>/dev/null
+# Convertir cada .evtx cuyo .jsonl falte o esté vacío
+find /root/evtx -maxdepth 1 -name '*.evtx' | while read -r f; do
+  j="${f%.evtx}.jsonl"
+  [ -s "$j" ] && continue
+  /usr/local/bin/evtx_dump -o jsonl "$f" > "$j" 2>/dev/null
 done
+EOF
+chmod +x /usr/local/lib/ct/convertir.sh
+# Esperar a que lleguen los assets (tolera el anidado) y convertir
+for i in $(seq 1 90); do find /root/evtx -name 'caso_tunel.evtx' | grep -q . && break; sleep 1; done
+/usr/local/lib/ct/convertir.sh
 
 # ---------- 6. Herramientas ct-* ----------
 cat > /usr/local/lib/ct/comun.sh <<'EOF'
@@ -71,6 +85,8 @@ f=0
 which auditctl >/dev/null && ok "auditd instalado" || { no "auditd todavía instalándose"; f=1; }
 which jq >/dev/null && ok "jq instalado" || { no "jq todavía instalándose"; f=1; }
 [ -x /usr/local/bin/evtx_dump ] && ok "evtx_dump listo" || { no "evtx_dump descargándose"; f=1; }
+# Red de seguridad: si el .jsonl falta, intentar convertir ahora (aplana anidados)
+[ -x /usr/local/bin/evtx_dump ] && [ ! -s /root/evtx/caso_tunel.jsonl ] && /usr/local/lib/ct/convertir.sh 2>/dev/null
 [ -f /root/evtx/caso_tunel.jsonl ] && [ -s /root/evtx/caso_tunel.jsonl ] && ok "caso_tunel.evtx convertido a JSON" || { no "convirtiendo los .evtx"; f=1; }
 id svc_backup >/dev/null 2>&1 && ok "servidor srv-erp con el incidente #3 plantado" || { no "preparando el servidor"; f=1; }
 if [ $f = 0 ]; then echo -e "\n${V}Todo listo. Empezá con: ct-mapa${N}\n"; else echo -e "\n${A}Esperá 20 segundos y volvé a correr ct-listo.${N}\n"; fi
@@ -359,6 +375,7 @@ for k in identidad sudoers privilegiado; do auditctl -l 2>/dev/null | grep -q --
 auditctl -l 2>/dev/null | grep -q -- "-k propia" && ok "regla propia (-k propia) cargada — nivel completo del artefacto" || echo "  [..] sin regla propia todavía (opcional para el mínimo; necesaria para el artefacto completo)"
 [ -f /root/.ct/simulado ] && ok "el atacante ya volvió (ct-simular)" || no "todavía no corriste ct-simular"
 ti "Estado del bloque B"
+[ -x /usr/local/bin/evtx_dump ] && [ ! -s /root/evtx/caso_tunel.jsonl ] && /usr/local/lib/ct/convertir.sh 2>/dev/null
 [ -s /root/evtx/caso_tunel.jsonl ] && ok "caso_tunel listo ($(wc -l < /root/evtx/caso_tunel.jsonl) eventos)" || no "caso_tunel no convertido → ct-listo"
 ti "Banderas obtenidas"; cat /root/.ct/banderas 2>/dev/null || echo "  ninguna todavía"
 EOF
