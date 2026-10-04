@@ -1,0 +1,37 @@
+#!/bin/bash
+LAB=/root/lab5
+PERFIL=/etc/apparmor.d/opt.condor.leer-config
+APP=/opt/condor/leer-config
+B_A1="CT{l5-a-min-4e7b2a}"; B_A2="CT{l5-a-com-91d3f6}"; B_A3="CT{l5-a-ext-c58a17}"; B_AR="CT{l5-a-res-2b6e90}"
+B_B1="CT{l5-b-min-7a3c1d}"; B_B2="CT{l5-b-com-e24f88}"; B_B3="CT{l5-b-ext-5d9b3c}"; B_BR="CT{l5-b-res-a71e42}"
+verde(){ printf '\033[32m%s\033[0m\n' "$*"; }
+rojo(){ printf '\033[31m%s\033[0m\n' "$*"; }
+amar(){ printf '\033[33m%s\033[0m\n' "$*"; }
+guardar(){ grep -q "$2" $LAB/.banderas 2>/dev/null || echo "$1 $2" >> $LAB/.banderas; }
+modo_perfil(){ # imprime complain | enforce | ninguno
+  if aa-status 2>/dev/null | awk '/profiles are in enforce mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo enforce
+  elif aa-status 2>/dev/null | awk '/profiles are in complain mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo complain
+  else echo ninguno; fi; }
+
+cat <<'EOF'
+══════════════════════════════════════════════════════════════════
+ LAB 5 · CÓNDOR TECH — Confinar con AppArmor y asegurar la Zona B
+══════════════════════════════════════════════════════════════════
+ BLOQUE A · AppArmor (el servicio /opt/condor/leer-config)
+   A1  mínimo   2 pts  perfil cargado en COMPLAIN, la app sigue funcionando   → ct-check A
+   A2  completo 2 pts  perfil en ENFORCE, /etc/shadow DENEGADO, app funciona  → ct-check A
+   A3  extra    1 pt   necesidad nueva (--registrar) concedida con 1 línea    → ct-check A
+   Rescate A    1 pt   ct-rescate A  (aplica el perfil listo en enforce)
+ BLOQUE B · Kubernetes (namespace tienda) — independiente del bloque A
+   B1  mínimo   2 pts  nombre del Pod privilegiado                            → ct-responder b1 <nombre>
+   B2  completo 2 pts  Pod "carrito" endurecido y el legacy eliminado         → ct-check B
+   B3  extra    1 pt   + sin capabilities, sin escalada, seccomp por defecto  → ct-check B
+   Rescate B    1 pt   ct-rescate B  (despliega el carrito endurecido)
+──────────────────────────────────────────────────────────────────
+ Herramientas: ct-listo · ct-mapa · ct-denegaciones · ct-check A|B
+               ct-responder b1 <resp> · ct-pista <a1|a2|a3|b1|b2|b3>
+               ct-bench [fails] · ct-rescate A|B · ct-retomar <bandera> · ct-banderas
+ Archivos:     /root/lab5/perfil-plantilla   /root/lab5/carrito-plantilla.yaml
+ Las banderas se suben en CTFd, categoría «Lab 5». Cada quien en su cuenta.
+══════════════════════════════════════════════════════════════════
+EOF

@@ -1,0 +1,51 @@
+{
+  "title": "Lab 5 · Cóndor Tech — Confinar con AppArmor y asegurar el clúster (Zona B)",
+  "description": "Módulo 4 CIBER13 · Clase 10. Bloque A: perfil AppArmor para un servicio. Bloque B: Pod privilegiado en Kubernetes + kube-bench.",
+  "details": {
+    "intro": {
+      "text": "intro.md",
+      "background": "background.sh"
+    },
+    "steps": [
+      {
+        "title": "A1 · Perfil en modo complain",
+        "text": "step1.md"
+      },
+      {
+        "title": "A2 · Enforce: la denegación",
+        "text": "step2.md"
+      },
+      {
+        "title": "A3 · Extra: una necesidad nueva y legítima",
+        "text": "step3.md"
+      },
+      {
+        "title": "B1 · Encontrar el Pod privilegiado",
+        "text": "step4.md"
+      },
+      {
+        "title": "B2 · Endurecer el Pod",
+        "text": "step5.md"
+      },
+      {
+        "title": "B3 · Extra + kube-bench para el estándar",
+        "text": "step6.md"
+      }
+    ],
+    "finish": {
+      "text": "finish.md"
+    },
+    "assets": {
+      "host01": [
+        {
+          "file": "*",
+          "target": "/root/lab5/",
+          "chmod": "+x"
+        }
+      ]
+    }
+  },
+  "backend": {
+    "imageid": "kubernetes-kubeadm-1node"
+  }
+}

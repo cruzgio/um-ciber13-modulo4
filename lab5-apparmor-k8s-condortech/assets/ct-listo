@@ -1,0 +1,22 @@
+#!/bin/bash
+LAB=/root/lab5
+PERFIL=/etc/apparmor.d/opt.condor.leer-config
+APP=/opt/condor/leer-config
+B_A1="CT{l5-a-min-4e7b2a}"; B_A2="CT{l5-a-com-91d3f6}"; B_A3="CT{l5-a-ext-c58a17}"; B_AR="CT{l5-a-res-2b6e90}"
+B_B1="CT{l5-b-min-7a3c1d}"; B_B2="CT{l5-b-com-e24f88}"; B_B3="CT{l5-b-ext-5d9b3c}"; B_BR="CT{l5-b-res-a71e42}"
+verde(){ printf '\033[32m%s\033[0m\n' "$*"; }
+rojo(){ printf '\033[31m%s\033[0m\n' "$*"; }
+amar(){ printf '\033[33m%s\033[0m\n' "$*"; }
+guardar(){ grep -q "$2" $LAB/.banderas 2>/dev/null || echo "$1 $2" >> $LAB/.banderas; }
+modo_perfil(){ # imprime complain | enforce | ninguno
+  if aa-status 2>/dev/null | awk '/profiles are in enforce mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo enforce
+  elif aa-status 2>/dev/null | awk '/profiles are in complain mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo complain
+  else echo ninguno; fi; }
+
+echo "== Lab 5 · ¿está listo el escenario? =="
+if [ -f $LAB/.listo ]; then verde "✔ preparación terminada"; else amar "… todavía preparando (tarda 1–3 min). Últimas líneas:"; tail -3 $LAB/setup.log 2>/dev/null; fi
+kubectl get nodes --no-headers 2>/dev/null | grep -q " Ready" && verde "✔ clúster Kubernetes: nodo Ready" || rojo "✘ el nodo no está Ready todavía"
+if command -v aa-status >/dev/null && aa-enabled >/dev/null 2>&1; then verde "✔ AppArmor activo ($(aa-status 2>/dev/null | grep -c 'enforce mode' >/dev/null; aa-status 2>/dev/null | awk '/profiles are loaded/{print $1}') perfiles cargados)"; else rojo "✘ AppArmor no disponible aún"; fi
+command -v kube-bench >/dev/null && verde "✔ kube-bench $(kube-bench version 2>/dev/null | head -1)" || amar "… kube-bench todavía no está (solo se usa en B3)"
+kubectl get pods -n tienda --no-headers 2>/dev/null | grep -q Running && verde "✔ Zona B (namespace tienda) desplegada" || amar "… Zona B aún no desplegada"
+echo; echo "Siguiente: ct-mapa"

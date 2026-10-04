@@ -1,0 +1,26 @@
+#!/bin/bash
+LAB=/root/lab5
+PERFIL=/etc/apparmor.d/opt.condor.leer-config
+APP=/opt/condor/leer-config
+B_A1="CT{l5-a-min-4e7b2a}"; B_A2="CT{l5-a-com-91d3f6}"; B_A3="CT{l5-a-ext-c58a17}"; B_AR="CT{l5-a-res-2b6e90}"
+B_B1="CT{l5-b-min-7a3c1d}"; B_B2="CT{l5-b-com-e24f88}"; B_B3="CT{l5-b-ext-5d9b3c}"; B_BR="CT{l5-b-res-a71e42}"
+verde(){ printf '\033[32m%s\033[0m\n' "$*"; }
+rojo(){ printf '\033[31m%s\033[0m\n' "$*"; }
+amar(){ printf '\033[33m%s\033[0m\n' "$*"; }
+guardar(){ grep -q "$2" $LAB/.banderas 2>/dev/null || echo "$1 $2" >> $LAB/.banderas; }
+modo_perfil(){ # imprime complain | enforce | ninguno
+  if aa-status 2>/dev/null | awk '/profiles are in enforce mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo enforce
+  elif aa-status 2>/dev/null | awk '/profiles are in complain mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo complain
+  else echo ninguno; fi; }
+
+# Corre kube-bench (CIS Kubernetes Benchmark) contra este nodo y guarda la salida para el artefacto
+command -v kube-bench >/dev/null || { rojo "kube-bench no está instalado en este escenario (revisa /root/lab5/setup.log). Plan B: la salida de ejemplo del docente."; exit 1; }
+OUT=$LAB/kube-bench.txt
+if [ ! -s $OUT ] || [ "$1" = "run" ]; then
+  echo "Ejecutando kube-bench sobre el nodo (control plane + worker)… tarda ~20 s"
+  kube-bench run --targets master,node >$OUT 2>&1
+fi
+case "$1" in
+ fails) grep -E '^\[FAIL\]' $OUT | head -40; echo; echo "Total [FAIL]: $(grep -c '^\[FAIL\]' $OUT)  ·  salida completa en $OUT" ;;
+ *) grep -E '^== Summary' -A5 $OUT; echo; echo "Resumen por sección arriba. Para ver solo los hallazgos: ct-bench fails   ·  salida completa: less $OUT" ;;
+esac

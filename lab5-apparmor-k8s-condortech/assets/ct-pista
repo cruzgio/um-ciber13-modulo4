@@ -1,0 +1,75 @@
+#!/bin/bash
+LAB=/root/lab5
+PERFIL=/etc/apparmor.d/opt.condor.leer-config
+APP=/opt/condor/leer-config
+B_A1="CT{l5-a-min-4e7b2a}"; B_A2="CT{l5-a-com-91d3f6}"; B_A3="CT{l5-a-ext-c58a17}"; B_AR="CT{l5-a-res-2b6e90}"
+B_B1="CT{l5-b-min-7a3c1d}"; B_B2="CT{l5-b-com-e24f88}"; B_B3="CT{l5-b-ext-5d9b3c}"; B_BR="CT{l5-b-res-a71e42}"
+verde(){ printf '\033[32m%s\033[0m\n' "$*"; }
+rojo(){ printf '\033[31m%s\033[0m\n' "$*"; }
+amar(){ printf '\033[33m%s\033[0m\n' "$*"; }
+guardar(){ grep -q "$2" $LAB/.banderas 2>/dev/null || echo "$1 $2" >> $LAB/.banderas; }
+modo_perfil(){ # imprime complain | enforce | ninguno
+  if aa-status 2>/dev/null | awk '/profiles are in enforce mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo enforce
+  elif aa-status 2>/dev/null | awk '/profiles are in complain mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo complain
+  else echo ninguno; fi; }
+
+case "$1" in
+a1) cat <<'EOF'
+A1 · Cargar el perfil en complain
+  1. Copia la plantilla al directorio de perfiles:  cp /root/lab5/perfil-plantilla /etc/apparmor.d/opt.condor.leer-config
+  2. Cárgalo en modo complain:                      aa-complain /etc/apparmor.d/opt.condor.leer-config
+  3. Comprueba que está cargado:                    aa-status | grep leer-config
+  4. Ejercita el servicio:  /opt/condor/leer-config --config ; --secreto ; --ping
+  5. Mira qué «habría negado»:                      ct-denegaciones
+  Complain no bloquea: registra. Es la red de seguridad para no romper la app.
+EOF
+;;
+a2) cat <<'EOF'
+A2 · Pasar a enforce y capturar la denegación
+  1. aa-enforce /etc/apparmor.d/opt.condor.leer-config
+  2. /opt/condor/leer-config --config   → debe seguir diciendo OK
+  3. /opt/condor/leer-config --secreto  → debe decir BLOQUEADO, aunque eres root
+  4. ct-denegaciones                    → busca apparmor="DENIED" ... name="/etc/shadow"
+  Si --config falla en enforce, el perfil le quitó algo a bash: la línea ALLOWED de ct-denegaciones te dice qué ruta y qué permiso.
+EOF
+;;
+a3) cat <<'EOF'
+A3 · Una necesidad nueva y legítima (reto extra)
+  El servicio ahora necesita escribir su bitácora: /opt/condor/leer-config --registrar  → en enforce falla.
+  La respuesta correcta NO es volver a complain ni poner /var/log/** rw.
+  1. Edita el perfil (nano /etc/apparmor.d/opt.condor.leer-config) y agrega UNA línea con el archivo exacto y el permiso exacto (solo escritura).
+  2. Recarga: apparmor_parser -r /etc/apparmor.d/opt.condor.leer-config
+  3. ct-check A
+  Permisos de archivo en AppArmor: r lectura, w escritura, a solo agregar, x ejecutar (ix/px/ux), m mapear en memoria.
+EOF
+;;
+b1) cat <<'EOF'
+B1 · Encontrar el Pod privilegiado
+  kubectl get pods -A                         → lista todo. Los del namespace tienda son la Zona B.
+  kubectl get pod <nombre> -n tienda -o yaml  → busca privileged, hostPID y hostPath.
+  Con jq, de una:
+  kubectl get pods -A -o json | jq -r '.items[] | select(.spec.containers[].securityContext.privileged==true) | "\(.metadata.namespace)/\(.metadata.name)"'
+  Respuesta: ct-responder b1 <nombre>
+EOF
+;;
+b2) cat <<'EOF'
+B2 · Endurecer el Pod
+  1. kubectl delete pod carrito-legacy -n tienda
+  2. nano /root/lab5/carrito-plantilla.yaml  → rellena los ____ (privileged false, runAsNonRoot true, runAsUser 10001,
+     readOnlyRootFilesystem true, limits cpu 250m y memory 128Mi). Sin hostPath.
+  3. kubectl apply -f /root/lab5/carrito-plantilla.yaml
+  4. kubectl get pod carrito -n tienda   → Running.  Si queda en CreateContainerConfigError: kubectl describe pod carrito -n tienda
+  5. ct-check B
+  Para corregir: kubectl delete pod carrito -n tienda && kubectl apply -f /root/lab5/carrito-plantilla.yaml
+EOF
+;;
+b3) cat <<'EOF'
+B3 · Extra: cerrar lo que queda
+  En el securityContext del contenedor: allowPrivilegeEscalation: false  y  capabilities: {drop: ["ALL"]}
+  En el securityContext del Pod (nivel spec): seccompProfile: {type: RuntimeDefault}
+  Luego: kubectl delete pod carrito -n tienda && kubectl apply -f /root/lab5/carrito-plantilla.yaml && ct-check B
+  Después corre ct-bench fails: esos [FAIL] alimentan la checklist del estándar de contenedores (artefacto del Runbook).
+EOF
+;;
+*) echo "uso: ct-pista a1|a2|a3|b1|b2|b3" ;;
+esac

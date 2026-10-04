@@ -1,0 +1,79 @@
+#!/bin/bash
+LAB=/root/lab5
+PERFIL=/etc/apparmor.d/opt.condor.leer-config
+APP=/opt/condor/leer-config
+B_A1="CT{l5-a-min-4e7b2a}"; B_A2="CT{l5-a-com-91d3f6}"; B_A3="CT{l5-a-ext-c58a17}"; B_AR="CT{l5-a-res-2b6e90}"
+B_B1="CT{l5-b-min-7a3c1d}"; B_B2="CT{l5-b-com-e24f88}"; B_B3="CT{l5-b-ext-5d9b3c}"; B_BR="CT{l5-b-res-a71e42}"
+verde(){ printf '\033[32m%s\033[0m\n' "$*"; }
+rojo(){ printf '\033[31m%s\033[0m\n' "$*"; }
+amar(){ printf '\033[33m%s\033[0m\n' "$*"; }
+guardar(){ grep -q "$2" $LAB/.banderas 2>/dev/null || echo "$1 $2" >> $LAB/.banderas; }
+modo_perfil(){ # imprime complain | enforce | ninguno
+  if aa-status 2>/dev/null | awk '/profiles are in enforce mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo enforce
+  elif aa-status 2>/dev/null | awk '/profiles are in complain mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo complain
+  else echo ninguno; fi; }
+
+case "$1" in
+A|a)
+  echo "== Bloque A · verificación del perfil de leer-config =="
+  m=$(modo_perfil)
+  echo "modo del perfil: $m"
+  cfg=$($APP --config 2>&1); echo "--config   → $cfg"
+  sec=$($APP --secreto 2>&1); echo "--secreto  → $sec"
+  reg=$($APP --registrar 2>&1); echo "--registrar→ $reg"
+  if [ "$m" = ninguno ]; then rojo "✘ el perfil no está cargado. Pista: ct-pista a1"; exit 1; fi
+  if ! echo "$cfg" | grep -q '^OK'; then rojo "✘ la app ya no puede leer su configuración: el perfil le quitó algo que necesita. Mira ct-denegaciones"; exit 1; fi
+  if [ "$m" = complain ]; then
+     verde "✔ A1 mínimo: perfil en complain y la app funciona"; verde "   bandera A1: $B_A1"; guardar A1 $B_A1
+     echo "$sec" | grep -q '^LEÍDO' && amar "   ojo: en complain /etc/shadow todavía se lee. Mira ct-denegaciones: ahí está lo que enforce negaría."
+     echo "Siguiente: aa-enforce $PERFIL  y luego ct-check A"; exit 0; fi
+  # enforce
+  if echo "$sec" | grep -q '^LEÍDO'; then rojo "✘ en enforce, pero /etc/shadow se sigue leyendo. ¿El perfil tiene una regla demasiado amplia (/etc/** r)?"; exit 1; fi
+  dmesg 2>/dev/null | grep 'apparmor="DENIED"' | grep leer-config | grep -q 'name="/etc/shadow"' \
+     || { amar "   (no veo el DENIED de /etc/shadow en dmesg; vuelve a correr $APP --secreto)"; }
+  verde "✔ A1 mínimo (incluido): $B_A1"; guardar A1 $B_A1
+  verde "✔ A2 completo: perfil en enforce, /etc/shadow denegado, la app sigue leyendo su configuración"
+  verde "   bandera A2: $B_A2"; guardar A2 $B_A2
+  if echo "$reg" | grep -q '^REGISTRADO'; then
+     verde "✔ A3 extra: la necesidad nueva (--registrar) quedó concedida sin abrir el perfil"; verde "   bandera A3: $B_A3"; guardar A3 $B_A3
+  else amar "   A3 pendiente: --registrar aún falla. Es el reto extra (ct-pista a3)."; fi ;;
+B|b)
+  echo "== Bloque B · verificación del Pod carrito (namespace tienda) =="
+  kubectl get pod carrito-legacy -n tienda >/dev/null 2>&1 && { rojo "✘ carrito-legacy sigue vivo. Un Pod privilegiado en el clúster invalida todo lo demás: elimínalo."; exit 1; }
+  J=$(kubectl get pod carrito -n tienda -o json 2>/dev/null) || { rojo "✘ no existe el Pod carrito en tienda. Aplica tu carrito-plantilla.yaml (ct-pista b2)"; exit 1; }
+  echo "$J" | python3 - <<'PY'
+import json,sys
+p=json.load(sys.stdin); s=p["spec"]; c=s["containers"][0]; sc=c.get("securityContext",{}) ; psc=s.get("securityContext",{})
+fase=p.get("status",{}).get("phase")
+checks=[
+ ("Running", fase=="Running", f"fase actual: {fase} (kubectl describe pod carrito -n tienda)"),
+ ("privileged=false", sc.get("privileged",False) is False, "privileged debe ser false"),
+ ("runAsNonRoot=true", sc.get("runAsNonRoot") is True or psc.get("runAsNonRoot") is True, "runAsNonRoot: true (y un runAsUser > 0)"),
+ ("readOnlyRootFilesystem=true", sc.get("readOnlyRootFilesystem") is True, "readOnlyRootFilesystem: true"),
+ ("limits cpu y memory", bool(c.get("resources",{}).get("limits",{}).get("cpu")) and bool(c.get("resources",{}).get("limits",{}).get("memory")), "resources.limits con cpu y memory"),
+ ("sin hostPath / hostPID", not any("hostPath" in v for v in s.get("volumes",[])) and not s.get("hostPID",False), "quita hostPath y hostPID"),
+]
+extra=[
+ ("capabilities drop ALL", "ALL" in (sc.get("capabilities",{}).get("drop") or []), "capabilities: {drop: [ALL]}"),
+ ("allowPrivilegeEscalation=false", sc.get("allowPrivilegeEscalation") is False, "allowPrivilegeEscalation: false"),
+ ("seccomp RuntimeDefault", (sc.get("seccompProfile",{}).get("type")=="RuntimeDefault") or (psc.get("seccompProfile",{}).get("type")=="RuntimeDefault"), "seccompProfile: {type: RuntimeDefault}"),
+]
+ok=True
+for n,v,h in checks:
+    print(("  ✔ " if v else "  ✘ ")+n+("" if v else "   → "+h)); ok=ok and v
+sys.exit(0 if ok else 1)
+print()
+PY
+  rc=$?
+  if [ $rc -ne 0 ]; then rojo "✘ B2 todavía no. Corrige lo marcado y vuelve a aplicar: kubectl delete pod carrito -n tienda && kubectl apply -f /root/lab5/carrito-plantilla.yaml"; exit 1; fi
+  verde "✔ B2 completo: el carrito corre sin privilegios, sin root, inmutable, con límites y sin tocar el host"
+  verde "   bandera B2: $B_B2"; guardar B2 $B_B2
+  if echo "$J" | python3 -c '
+import json,sys
+p=json.load(sys.stdin); s=p["spec"]; c=s["containers"][0]; sc=c.get("securityContext",{}); psc=s.get("securityContext",{})
+ok = "ALL" in (sc.get("capabilities",{}).get("drop") or []) and sc.get("allowPrivilegeEscalation") is False and (sc.get("seccompProfile",{}).get("type")=="RuntimeDefault" or psc.get("seccompProfile",{}).get("type")=="RuntimeDefault")
+sys.exit(0 if ok else 1)'; then
+     verde "✔ B3 extra: sin capabilities, sin escalada de privilegios y con seccomp por defecto"; verde "   bandera B3: $B_B3"; guardar B3 $B_B3
+  else amar "   B3 pendiente (extra): drop ALL + allowPrivilegeEscalation false + seccomp RuntimeDefault. ct-pista b3"; fi ;;
+*) echo "uso: ct-check A | ct-check B" ;;
+esac

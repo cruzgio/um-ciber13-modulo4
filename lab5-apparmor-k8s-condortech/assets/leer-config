@@ -1,0 +1,30 @@
+#!/bin/bash
+# Cóndor Tech · leer-config — servicio de la Zona B que SOLO debería leer su propia configuración.
+# Sin perfil de AppArmor, como corre como root, puede leer cualquier cosa. Ese es el problema.
+case "${1:---config}" in
+  --config)
+    if c=$(</etc/condor/app.conf); then
+      echo "OK: configuración leída ($(printf '%s\n' "$c" | wc -l) líneas)"
+    else
+      echo "ERROR: no pude leer /etc/condor/app.conf (¿el perfil lo permite?)"; exit 1
+    fi ;;
+  --secreto)
+    if s=$(</etc/shadow) 2>/dev/null; then
+      echo "LEÍDO: /etc/shadow (${#s} bytes)  <-- esto NO debería ser posible"
+    else
+      echo "BLOQUEADO: no pude leer /etc/shadow (bien: el perfil manda)"; exit 1
+    fi ;;
+  --ping)
+    if : 2>/dev/null <>/dev/tcp/127.0.0.1/6443; then
+      echo "RED: conexión abierta a 127.0.0.1:6443  <-- esto NO debería ser posible"
+    else
+      echo "BLOQUEADO: no pude abrir red (bien: el perfil no concede red)"; exit 1
+    fi ;;
+  --registrar)
+    if echo "$(date '+%F %T') leer-config: lectura de configuración" >>/var/log/condor/app.log 2>/dev/null; then
+      echo "REGISTRADO: evento escrito en /var/log/condor/app.log"
+    else
+      echo "ERROR: no pude escribir /var/log/condor/app.log (¿el perfil lo permite?)"; exit 1
+    fi ;;
+  *) echo "uso: leer-config [--config|--secreto|--ping|--registrar]"; exit 2 ;;
+esac

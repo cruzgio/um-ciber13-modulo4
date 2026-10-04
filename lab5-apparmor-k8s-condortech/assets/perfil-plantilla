@@ -1,0 +1,20 @@
+# Perfil AppArmor del servicio leer-config de Cóndor Tech — PLANTILLA (Bloque A)
+# Regla de oro: lo que no está escrito aquí, el servicio NO lo puede hacer.
+#include <tunables/global>
+
+/opt/condor/leer-config {
+  #include <abstractions/base>
+  #include <abstractions/bash>
+
+  # El intérprete que ejecuta el script hereda este mismo perfil (ix = inherit)
+  /usr/bin/bash ix,
+  /bin/bash ix,
+  /opt/condor/leer-config r,
+  /dev/tty rw,
+
+  # Lo ÚNICO que el servicio necesita leer:
+  /etc/condor/app.conf r,
+
+  # (A3) Si el servicio gana una necesidad nueva y legítima, se agrega AQUÍ una sola línea.
+  # No se abre todo /var/log: se concede el archivo exacto y el permiso exacto.
+}
