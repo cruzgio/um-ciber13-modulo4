@@ -1,9 +1,9 @@
 # A2 · Enforce: la denegación (nivel completo · 2 pts)
 
-Pasa el perfil a **enforce**. Ahora las reglas mandan, incluso sobre root:
+Pasa el perfil a **enforce** (sin `-C`, el perfil se carga tal como está escrito, y está escrito sin la bandera complain). Ahora las reglas mandan, incluso sobre root:
 
 ```plain
-aa-enforce /etc/apparmor.d/opt.condor.leer-config
+apparmor_parser -r /etc/apparmor.d/opt.condor.leer-config
 /opt/condor/leer-config --config
 /opt/condor/leer-config --secreto
 /opt/condor/leer-config --ping

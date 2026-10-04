@@ -7,6 +7,7 @@ B_B1="CT{l5-b-min-7a3c1d}"; B_B2="CT{l5-b-com-e24f88}"; B_B3="CT{l5-b-ext-5d9b3c
 verde(){ printf '\033[32m%s\033[0m\n' "$*"; }
 rojo(){ printf '\033[31m%s\033[0m\n' "$*"; }
 amar(){ printf '\033[33m%s\033[0m\n' "$*"; }
+eco(){ printf '\033[2m   $ %s\033[0m\n' "$*"; }   # muestra el comando real que la herramienta ejecuta
 guardar(){ grep -q "$2" $LAB/.banderas 2>/dev/null || echo "$1 $2" >> $LAB/.banderas; }
 modo_perfil(){ # imprime complain | enforce | ninguno
   if aa-status 2>/dev/null | awk '/profiles are in enforce mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo enforce
@@ -18,6 +19,7 @@ command -v kube-bench >/dev/null || { rojo "kube-bench no está instalado en est
 OUT=$LAB/kube-bench.txt
 if [ ! -s $OUT ] || [ "$1" = "run" ]; then
   echo "Ejecutando kube-bench sobre el nodo (control plane + worker)… tarda ~20 s"
+  eco "kube-bench run --targets master,node > $OUT"
   kube-bench run --targets master,node >$OUT 2>&1
 fi
 case "$1" in

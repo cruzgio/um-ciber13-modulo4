@@ -7,6 +7,7 @@ B_B1="CT{l5-b-min-7a3c1d}"; B_B2="CT{l5-b-com-e24f88}"; B_B3="CT{l5-b-ext-5d9b3c
 verde(){ printf '\033[32m%s\033[0m\n' "$*"; }
 rojo(){ printf '\033[31m%s\033[0m\n' "$*"; }
 amar(){ printf '\033[33m%s\033[0m\n' "$*"; }
+eco(){ printf '\033[2m   $ %s\033[0m\n' "$*"; }   # muestra el comando real que la herramienta ejecuta
 guardar(){ grep -q "$2" $LAB/.banderas 2>/dev/null || echo "$1 $2" >> $LAB/.banderas; }
 modo_perfil(){ # imprime complain | enforce | ninguno
   if aa-status 2>/dev/null | awk '/profiles are in enforce mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo enforce
@@ -16,10 +17,10 @@ modo_perfil(){ # imprime complain | enforce | ninguno
 # Quien ya tiene una bandera del bloque A entra con ese estado construido (el bloque B no depende de A)
 b="$1"
 case "$b" in
- "$B_A1") cp /root/lab5/perfil-plantilla $PERFIL; aa-complain $PERFIL >/dev/null 2>&1; guardar A1 $b; verde "Estado A1 restaurado: perfil en complain. Sigue en A2." ;;
- "$B_A2"|"$B_AR") cp /root/lab5/perfil-plantilla $PERFIL; aa-enforce $PERFIL >/dev/null 2>&1; guardar A2 $b; verde "Estado A2 restaurado: perfil en enforce. Sigue en A3 o pasa al bloque B." ;;
- "$B_A3") cp /root/lab5/perfil-rescate $PERFIL; aa-enforce $PERFIL >/dev/null 2>&1; guardar A3 $b; verde "Estado A3 restaurado. Pasa al bloque B." ;;
+ "$B_A1") eco "cp /root/lab5/perfil-plantilla $PERFIL && apparmor_parser -r -C $PERFIL"; cp /root/lab5/perfil-plantilla $PERFIL; apparmor_parser -r -C $PERFIL; guardar A1 $b; verde "Estado A1 restaurado: perfil en complain. Sigue en A2." ;;
+ "$B_A2"|"$B_AR") eco "cp /root/lab5/perfil-plantilla $PERFIL && apparmor_parser -r $PERFIL"; cp /root/lab5/perfil-plantilla $PERFIL; apparmor_parser -r $PERFIL; guardar A2 $b; verde "Estado A2 restaurado: perfil en enforce. Sigue en A3 o pasa al bloque B." ;;
+ "$B_A3") eco "cp /root/lab5/perfil-rescate $PERFIL && apparmor_parser -r $PERFIL"; cp /root/lab5/perfil-rescate $PERFIL; apparmor_parser -r $PERFIL; guardar A3 $b; verde "Estado A3 restaurado. Pasa al bloque B." ;;
  "$B_B1") guardar B1 $b; verde "B1 anotada. Sigue en B2." ;;
- "$B_B2"|"$B_BR") kubectl delete pod carrito-legacy -n tienda --ignore-not-found >/dev/null 2>&1; kubectl get pod carrito -n tienda >/dev/null 2>&1 || kubectl apply -f /root/lab5/carrito-rescate.yaml >/dev/null; guardar B2 $b; verde "Estado B2 restaurado. Sigue en B3." ;;
+ "$B_B2"|"$B_BR") eco "kubectl delete pod carrito-legacy -n tienda ; kubectl apply -f /root/lab5/carrito-rescate.yaml"; kubectl delete pod carrito-legacy -n tienda --ignore-not-found >/dev/null 2>&1; kubectl get pod carrito -n tienda >/dev/null 2>&1 || kubectl apply -f /root/lab5/carrito-rescate.yaml >/dev/null; guardar B2 $b; verde "Estado B2 restaurado. Sigue en B3." ;;
  *) rojo "bandera no reconocida. uso: ct-retomar CT{...}" ;;
 esac

@@ -7,6 +7,7 @@ B_B1="CT{l5-b-min-7a3c1d}"; B_B2="CT{l5-b-com-e24f88}"; B_B3="CT{l5-b-ext-5d9b3c
 verde(){ printf '\033[32m%s\033[0m\n' "$*"; }
 rojo(){ printf '\033[31m%s\033[0m\n' "$*"; }
 amar(){ printf '\033[33m%s\033[0m\n' "$*"; }
+eco(){ printf '\033[2m   $ %s\033[0m\n' "$*"; }   # muestra el comando real que la herramienta ejecuta
 guardar(){ grep -q "$2" $LAB/.banderas 2>/dev/null || echo "$1 $2" >> $LAB/.banderas; }
 modo_perfil(){ # imprime complain | enforce | ninguno
   if aa-status 2>/dev/null | awk '/profiles are in enforce mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo enforce
@@ -16,7 +17,8 @@ modo_perfil(){ # imprime complain | enforce | ninguno
 id="$1"; shift; r="$*"
 [ -z "$id" ] || [ -z "$r" ] && { echo "uso: ct-responder b1 <nombre del Pod privilegiado>"; exit 2; }
 case "$id" in
- b1) if [ "$r" = "carrito-legacy" ] || [ "$r" = "tienda/carrito-legacy" ]; then
+ b1) eco "comparo tu respuesta con el Pod que la Zona B despliega con privileged: true"
+     if [ "$r" = "carrito-legacy" ] || [ "$r" = "tienda/carrito-legacy" ]; then
         verde "✔ B1 mínimo: ese es el Pod privilegiado de la Zona B"; verde "   bandera B1: $B_B1"; guardar B1 $B_B1
         echo "Siguiente: endurecerlo (paso B2). Mira también el Pod pagos-worker: ¿qué tiene en sus variables de entorno?"
      else rojo "✘ no. Busca privileged: true →  kubectl get pods -A -o json | jq -r '.items[] | select(.spec.containers[].securityContext.privileged==true) | .metadata.name'"; fi ;;

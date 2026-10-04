@@ -13,7 +13,7 @@ La tentación es volver a complain o abrir `/var/log/** rw,`. **No.** Mínimo pr
 nano /etc/apparmor.d/opt.condor.leer-config
 ```{{exec}}
 
-Recarga el perfil (sigue en enforce) y verifica:
+Recarga el perfil (sin `-C`: sigue en enforce) y verifica:
 
 ```plain
 apparmor_parser -r /etc/apparmor.d/opt.condor.leer-config

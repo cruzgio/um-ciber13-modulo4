@@ -7,6 +7,7 @@ B_B1="CT{l5-b-min-7a3c1d}"; B_B2="CT{l5-b-com-e24f88}"; B_B3="CT{l5-b-ext-5d9b3c
 verde(){ printf '\033[32m%s\033[0m\n' "$*"; }
 rojo(){ printf '\033[31m%s\033[0m\n' "$*"; }
 amar(){ printf '\033[33m%s\033[0m\n' "$*"; }
+eco(){ printf '\033[2m   $ %s\033[0m\n' "$*"; }   # muestra el comando real que la herramienta ejecuta
 guardar(){ grep -q "$2" $LAB/.banderas 2>/dev/null || echo "$1 $2" >> $LAB/.banderas; }
 modo_perfil(){ # imprime complain | enforce | ninguno
   if aa-status 2>/dev/null | awk '/profiles are in enforce mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo enforce
@@ -17,7 +18,7 @@ case "$1" in
 a1) cat <<'EOF'
 A1 · Cargar el perfil en complain
   1. Copia la plantilla al directorio de perfiles:  cp /root/lab5/perfil-plantilla /etc/apparmor.d/opt.condor.leer-config
-  2. Cárgalo en modo complain:                      aa-complain /etc/apparmor.d/opt.condor.leer-config
+  2. Cárgalo en modo complain:  apparmor_parser -r -C /etc/apparmor.d/opt.condor.leer-config   (-r recarga, -C complain)
   3. Comprueba que está cargado:                    aa-status | grep leer-config
   4. Ejercita el servicio:  /opt/condor/leer-config --config ; --secreto ; --ping
   5. Mira qué «habría negado»:                      ct-denegaciones
@@ -26,7 +27,7 @@ EOF
 ;;
 a2) cat <<'EOF'
 A2 · Pasar a enforce y capturar la denegación
-  1. aa-enforce /etc/apparmor.d/opt.condor.leer-config
+  1. apparmor_parser -r /etc/apparmor.d/opt.condor.leer-config      (sin -C = enforce)
   2. /opt/condor/leer-config --config   → debe seguir diciendo OK
   3. /opt/condor/leer-config --secreto  → debe decir BLOQUEADO, aunque eres root
   4. ct-denegaciones                    → busca apparmor="DENIED" ... name="/etc/shadow"
@@ -36,7 +37,7 @@ EOF
 a3) cat <<'EOF'
 A3 · Una necesidad nueva y legítima (reto extra)
   El servicio ahora necesita escribir su bitácora: /opt/condor/leer-config --registrar  → en enforce falla.
-  La respuesta correcta NO es volver a complain ni poner /var/log/** rw.
+  La respuesta correcta NO es volver a complain (-C) ni poner /var/log/** rw.
   1. Edita el perfil (nano /etc/apparmor.d/opt.condor.leer-config) y agrega UNA línea con el archivo exacto y el permiso exacto (solo escritura).
   2. Recarga: apparmor_parser -r /etc/apparmor.d/opt.condor.leer-config
   3. ct-check A

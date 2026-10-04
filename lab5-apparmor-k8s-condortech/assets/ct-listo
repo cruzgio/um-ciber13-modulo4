@@ -7,6 +7,7 @@ B_B1="CT{l5-b-min-7a3c1d}"; B_B2="CT{l5-b-com-e24f88}"; B_B3="CT{l5-b-ext-5d9b3c
 verde(){ printf '\033[32m%s\033[0m\n' "$*"; }
 rojo(){ printf '\033[31m%s\033[0m\n' "$*"; }
 amar(){ printf '\033[33m%s\033[0m\n' "$*"; }
+eco(){ printf '\033[2m   $ %s\033[0m\n' "$*"; }   # muestra el comando real que la herramienta ejecuta
 guardar(){ grep -q "$2" $LAB/.banderas 2>/dev/null || echo "$1 $2" >> $LAB/.banderas; }
 modo_perfil(){ # imprime complain | enforce | ninguno
   if aa-status 2>/dev/null | awk '/profiles are in enforce mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo enforce
@@ -14,6 +15,7 @@ modo_perfil(){ # imprime complain | enforce | ninguno
   else echo ninguno; fi; }
 
 echo "== Lab 5 · ¿está listo el escenario? =="
+eco "kubectl get nodes ; aa-enabled ; aa-status ; kube-bench version ; kubectl get pods -n tienda"
 if [ -f $LAB/.listo ]; then verde "✔ preparación terminada"; else amar "… todavía preparando (tarda 1–3 min). Últimas líneas:"; tail -3 $LAB/setup.log 2>/dev/null; fi
 kubectl get nodes --no-headers 2>/dev/null | grep -q " Ready" && verde "✔ clúster Kubernetes: nodo Ready" || rojo "✘ el nodo no está Ready todavía"
 if command -v aa-status >/dev/null && aa-enabled >/dev/null 2>&1; then verde "✔ AppArmor activo ($(aa-status 2>/dev/null | grep -c 'enforce mode' >/dev/null; aa-status 2>/dev/null | awk '/profiles are loaded/{print $1}') perfiles cargados)"; else rojo "✘ AppArmor no disponible aún"; fi

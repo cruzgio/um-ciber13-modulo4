@@ -7,6 +7,7 @@ B_B1="CT{l5-b-min-7a3c1d}"; B_B2="CT{l5-b-com-e24f88}"; B_B3="CT{l5-b-ext-5d9b3c
 verde(){ printf '\033[32m%s\033[0m\n' "$*"; }
 rojo(){ printf '\033[31m%s\033[0m\n' "$*"; }
 amar(){ printf '\033[33m%s\033[0m\n' "$*"; }
+eco(){ printf '\033[2m   $ %s\033[0m\n' "$*"; }   # muestra el comando real que la herramienta ejecuta
 guardar(){ grep -q "$2" $LAB/.banderas 2>/dev/null || echo "$1 $2" >> $LAB/.banderas; }
 modo_perfil(){ # imprime complain | enforce | ninguno
   if aa-status 2>/dev/null | awk '/profiles are in enforce mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo enforce
@@ -16,8 +17,10 @@ modo_perfil(){ # imprime complain | enforce | ninguno
 case "$1" in
 A|a)
   echo "== Bloque A · verificación del perfil de leer-config =="
+  eco "aa-status | grep leer-config        (¿en qué modo está el perfil?)"
   m=$(modo_perfil)
   echo "modo del perfil: $m"
+  eco "$APP --config ; $APP --secreto ; $APP --registrar"
   cfg=$($APP --config 2>&1); echo "--config   → $cfg"
   sec=$($APP --secreto 2>&1); echo "--secreto  → $sec"
   reg=$($APP --registrar 2>&1); echo "--registrar→ $reg"
@@ -26,9 +29,10 @@ A|a)
   if [ "$m" = complain ]; then
      verde "✔ A1 mínimo: perfil en complain y la app funciona"; verde "   bandera A1: $B_A1"; guardar A1 $B_A1
      echo "$sec" | grep -q '^LEÍDO' && amar "   ojo: en complain /etc/shadow todavía se lee. Mira ct-denegaciones: ahí está lo que enforce negaría."
-     echo "Siguiente: aa-enforce $PERFIL  y luego ct-check A"; exit 0; fi
+     echo "Siguiente: apparmor_parser -r $PERFIL  (enforce) y luego ct-check A"; exit 0; fi
   # enforce
   if echo "$sec" | grep -q '^LEÍDO'; then rojo "✘ en enforce, pero /etc/shadow se sigue leyendo. ¿El perfil tiene una regla demasiado amplia (/etc/** r)?"; exit 1; fi
+  eco "dmesg | grep apparmor=\"DENIED\" | grep leer-config | grep name=\"/etc/shadow\""
   dmesg 2>/dev/null | grep 'apparmor="DENIED"' | grep leer-config | grep -q 'name="/etc/shadow"' \
      || { amar "   (no veo el DENIED de /etc/shadow en dmesg; vuelve a correr $APP --secreto)"; }
   verde "✔ A1 mínimo (incluido): $B_A1"; guardar A1 $B_A1
@@ -39,6 +43,8 @@ A|a)
   else amar "   A3 pendiente: --registrar aún falla. Es el reto extra (ct-pista a3)."; fi ;;
 B|b)
   echo "== Bloque B · verificación del Pod carrito (namespace tienda) =="
+  eco "kubectl get pod carrito-legacy -n tienda      (no debe existir)"
+  eco "kubectl get pod carrito -n tienda -o json      (se leen spec.containers[0].securityContext, resources, volumes, hostPID y status.phase)"
   kubectl get pod carrito-legacy -n tienda >/dev/null 2>&1 && { rojo "✘ carrito-legacy sigue vivo. Un Pod privilegiado en el clúster invalida todo lo demás: elimínalo."; exit 1; }
   J=$(kubectl get pod carrito -n tienda -o json 2>/dev/null) || { rojo "✘ no existe el Pod carrito en tienda. Aplica tu carrito-plantilla.yaml (ct-pista b2)"; exit 1; }
   echo "$J" | python3 - <<'PY'

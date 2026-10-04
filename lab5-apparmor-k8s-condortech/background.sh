@@ -30,7 +30,7 @@ chmod 755 /opt/condor/leer-config
 chmod 644 /etc/condor/app.conf
 touch /var/log/condor/app.log; chmod 666 /var/log/condor/app.log
 
-# 4. AppArmor: utilidades (aa-status, aa-complain, aa-enforce)
+# 4. AppArmor: utilidades (aa-status, aa-enabled, aa-unconfined)
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get install -y -qq apparmor apparmor-utils >/dev/null

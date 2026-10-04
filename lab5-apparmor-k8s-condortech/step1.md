@@ -16,11 +16,13 @@ Mira la plantilla del perfil (fíjate en la regla de oro del comentario):
 cat /root/lab5/perfil-plantilla
 ```{{exec}}
 
-Instálalo y cárgalo en **complain**: en este modo AppArmor no bloquea, solo registra lo que *habría* negado. Es la red de seguridad para no romper la aplicación.
+Instálalo y cárgalo en **complain** con `apparmor_parser` (el cargador real del kernel; `-r` recarga, `-C` fuerza complain). En este modo AppArmor no bloquea, solo registra lo que *habría* negado. Es la red de seguridad para no romper la aplicación.
+
+> En este nodo `aa-complain` / `aa-enforce` fallan con `ERROR: Operation {'runbindable'}…`: son utilidades en Python que leen todos los perfiles del sistema y tropiezan con uno que no entienden. `apparmor_parser` es lo que esas utilidades llaman por debajo.
 
 ```plain
 cp /root/lab5/perfil-plantilla /etc/apparmor.d/opt.condor.leer-config
-aa-complain /etc/apparmor.d/opt.condor.leer-config
+apparmor_parser -r -C /etc/apparmor.d/opt.condor.leer-config
 aa-status | grep -A1 complain
 ```{{exec}}
 
