@@ -8,8 +8,8 @@ Lo que acabas de hacer **es DIE con las manos**:
 
 Y AppArmor cerró la otra puerta: aunque el proceso sea root, solo hace lo que el perfil dice.
 
-**Antes de cerrar la pestaña:** `ct-banderas` y sube cada una en CTFd (categoría Lab 5). Copia también la línea `DENIED` de `ct-denegaciones` y tus 3 `[FAIL]` de kube-bench: son la evidencia del artefacto.
+**Antes de cerrar la pestaña:** `ct-banderas` y sube cada una en CTFd (categoría Lab 5). Copia también tu perfil final, la línea `DENIED` de `ct-denegaciones` y tu manifiesto de carrito: son el artefacto. Si vas por el nivel completo, un `[FAIL]` de kube-bench.
 
-**Artefacto del Runbook (equipo):** *Estándar de despliegue seguro de contenedores de Cóndor Tech* — mínimo aceptable ≈30 min (el perfil AppArmor funcionando + 5 puntos de checklist); nivel completo ≈60 min (+ checklist derivada de kube-bench con cómo se verifica cada punto). Plantilla en Moodle, Semana 3.
+**Artefacto del Runbook (equipo):** *Estándar de despliegue seguro de contenedores de Cóndor Tech* — mínimo aceptable ≈20 min (perfil final, línea DENIED y los 5 candados marcados); nivel completo +15 min (un hallazgo de kube-bench). Plantilla en Moodle, Semana 3.
 
 > Si no terminaste: `ct-rescate A` / `ct-rescate B` siguen disponibles, y con `ct-retomar CT{...}` retomas en otra sesión desde donde dejaste. Parar no cuesta nota.
