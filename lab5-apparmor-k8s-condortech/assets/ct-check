@@ -9,6 +9,20 @@ rojo(){ printf '\033[31m%s\033[0m\n' "$*"; }
 amar(){ printf '\033[33m%s\033[0m\n' "$*"; }
 eco(){ printf '\033[2m   $ %s\033[0m\n' "$*"; }   # muestra el comando real que la herramienta ejecuta
 guardar(){ grep -q "$2" $LAB/.banderas 2>/dev/null || echo "$1 $2" >> $LAB/.banderas; }
+PRED=$LAB/.predicciones
+pregunta(){ case "$1" in
+  a1) echo "Con el perfil cargado en COMPLAIN, ¿--secreto va a poder leer /etc/shadow?  →  ct-predigo a1 si|no";;
+  a2) echo "Con el perfil en ENFORCE, ¿cuál de los tres va a seguir funcionando: config, secreto o ping?  →  ct-predigo a2 config|secreto|ping";;
+  a3) echo "Para que --registrar funcione, ¿qué permiso necesita el perfil sobre /var/log/condor/app.log: r, w o rw?  →  ct-predigo a3 r|w|rw";;
+  b1) echo "Antes de mirar los manifiestos: de los 3 Pods de tienda, ¿cuántos crees que corren como root dentro del contenedor?  →  ct-predigo b1 0|1|2|3";;
+  b2) echo "Con readOnlyRootFilesystem: true, ¿el contenedor va a poder escribir en /tmp?  →  ct-predigo b2 si|no";;
+  b3) echo "Si quitas TODAS las capabilities (drop ALL), ¿el Pod carrito sigue arrancando?  →  ct-predigo b3 si|no";;
+ esac; }
+prediccion(){ grep "^$1 " $PRED 2>/dev/null | tail -1 | cut -d' ' -f2-; }
+exigir_prediccion(){ # $1=id ; sale con 1 si no hay predicción registrada
+  if [ -z "$(prediccion $1)" ]; then amar "Antes de verificar, piensa y registra tu predicción:"; echo "   $(pregunta $1)"; return 1; fi; }
+comparar(){ # $1=id $2=lo que pasó $3=por qué
+  echo; echo "   Tu predicción ($1): $(prediccion $1)   ·   Lo que pasó: $2"; echo "   Por qué: $3"; }
 modo_perfil(){ # imprime complain | enforce | ninguno
   if aa-status 2>/dev/null | awk '/profiles are in enforce mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo enforce
   elif aa-status 2>/dev/null | awk '/profiles are in complain mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo complain
@@ -27,10 +41,12 @@ A|a)
   if [ "$m" = ninguno ]; then rojo "✘ el perfil no está cargado. Pista: ct-pista a1"; exit 1; fi
   if ! echo "$cfg" | grep -q '^OK'; then rojo "✘ la app ya no puede leer su configuración: el perfil le quitó algo que necesita. Mira ct-denegaciones"; exit 1; fi
   if [ "$m" = complain ]; then
+     exigir_prediccion a1 || exit 1
      verde "✔ A1 mínimo: perfil en complain y la app funciona"; verde "   bandera A1: $B_A1"; guardar A1 $B_A1
-     echo "$sec" | grep -q '^LEÍDO' && amar "   ojo: en complain /etc/shadow todavía se lee. Mira ct-denegaciones: ahí está lo que enforce negaría."
+     if echo "$sec" | grep -q '^LEÍDO'; then comparar a1 "sí, /etc/shadow se leyó" "complain no bloquea: registra lo que enforce negaría (ct-denegaciones lo muestra como ALLOWED)"; fi
      echo "Siguiente: apparmor_parser -r $PERFIL  (enforce) y luego ct-check A"; exit 0; fi
   # enforce
+  exigir_prediccion a2 || exit 1
   if echo "$sec" | grep -q '^LEÍDO'; then rojo "✘ en enforce, pero /etc/shadow se sigue leyendo. ¿El perfil tiene una regla demasiado amplia (/etc/** r)?"; exit 1; fi
   eco "dmesg | grep apparmor=\"DENIED\" | grep leer-config | grep name=\"/etc/shadow\""
   dmesg 2>/dev/null | grep 'apparmor="DENIED"' | grep leer-config | grep -q 'name="/etc/shadow"' \
@@ -38,9 +54,12 @@ A|a)
   verde "✔ A1 mínimo (incluido): $B_A1"; guardar A1 $B_A1
   verde "✔ A2 completo: perfil en enforce, /etc/shadow denegado, la app sigue leyendo su configuración"
   verde "   bandera A2: $B_A2"; guardar A2 $B_A2
+  comparar a2 "solo config siguió funcionando" "el perfil concede /etc/condor/app.conf r y nada más; /etc/shadow no está escrito y la red tampoco: lo que no está escrito, está negado, aunque seas root"
   if echo "$reg" | grep -q '^REGISTRADO'; then
+     exigir_prediccion a3 || { amar "   (A3 está resuelto en el sistema, pero registra tu predicción para recibir la bandera)"; exit 0; }
      verde "✔ A3 extra: la necesidad nueva (--registrar) quedó concedida sin abrir el perfil"; verde "   bandera A3: $B_A3"; guardar A3 $B_A3
-  else amar "   A3 pendiente: --registrar aún falla. Es el reto extra (ct-pista a3)."; fi ;;
+     comparar a3 "bastó w (o a) sobre el archivo exacto" "mínimo privilegio: el servicio escribe su bitácora, no la lee ni toca otro archivo de /var/log; si pusiste rw o /var/log/**, funciona, pero concedes más de lo que necesita"
+  else amar "   A3 pendiente: --registrar aún falla. Es el reto extra (ct-pista a3). Antes de tocar el perfil: $(pregunta a3)"; fi ;;
 B|b)
   echo "== Bloque B · verificación del Pod carrito (namespace tienda) =="
   eco "kubectl get pod carrito-legacy -n tienda      (no debe existir)"
@@ -71,15 +90,19 @@ sys.exit(0 if ok else 1)
 print()
 PY
   rc=$?
+  exigir_prediccion b2 || exit 1
   if [ $rc -ne 0 ]; then rojo "✘ B2 todavía no. Corrige lo marcado y vuelve a aplicar: kubectl delete pod carrito -n tienda && kubectl apply -f /root/lab5/carrito-plantilla.yaml"; exit 1; fi
   verde "✔ B2 completo: el carrito corre sin privilegios, sin root, inmutable, con límites y sin tocar el host"
   verde "   bandera B2: $B_B2"; guardar B2 $B_B2
+  comparar b2 "no sobre la imagen; sí en /tmp porque es un emptyDir montado aparte" "readOnlyRootFilesystem hace inmutable la imagen en ejecución (DIE: inmutable); lo que debe cambiar vive en un volumen explícito y efímero"
   if echo "$J" | python3 -c '
 import json,sys
 p=json.load(sys.stdin); s=p["spec"]; c=s["containers"][0]; sc=c.get("securityContext",{}); psc=s.get("securityContext",{})
 ok = "ALL" in (sc.get("capabilities",{}).get("drop") or []) and sc.get("allowPrivilegeEscalation") is False and (sc.get("seccompProfile",{}).get("type")=="RuntimeDefault" or psc.get("seccompProfile",{}).get("type")=="RuntimeDefault")
 sys.exit(0 if ok else 1)'; then
+     exigir_prediccion b3 || exit 0
      verde "✔ B3 extra: sin capabilities, sin escalada de privilegios y con seccomp por defecto"; verde "   bandera B3: $B_B3"; guardar B3 $B_B3
+     comparar b3 "sí, carrito está Running sin ninguna capability" "un proceso normal no necesita ningún poder de root; las capabilities solo hacen falta para cosas como abrir puertos bajos o montar; por eso drop ALL es el punto de partida y se agrega la que haga falta, con nombre"
   else amar "   B3 pendiente (extra): drop ALL + allowPrivilegeEscalation false + seccomp RuntimeDefault. ct-pista b3"; fi ;;
 *) echo "uso: ct-check A | ct-check B" ;;
 esac

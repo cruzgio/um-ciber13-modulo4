@@ -1,6 +1,12 @@
 # A1 · El perfil en modo complain (mínimo aceptable · 2 pts)
 
-El servicio `/opt/condor/leer-config` solo debería leer **su** configuración. Como corre como root, hoy puede leer cualquier cosa:
+El servicio `/opt/condor/leer-config` solo debería leer **su** configuración. Antes de ejecutarlo, léelo: ¿qué hace cada opción y cuál de ellas debería estar prohibida?
+
+```plain
+cat /opt/condor/leer-config
+```{{exec}}
+
+Ahora sí, como root y sin ningún perfil:
 
 ```plain
 /opt/condor/leer-config --config
@@ -10,15 +16,19 @@ El servicio `/opt/condor/leer-config` solo debería leer **su** configuración. 
 
 Eso es **DAC** (control discrecional): root puede todo. **AppArmor** agrega **MAC** (control obligatorio): un perfil dice qué puede hacer *ese programa*, sea quien sea el usuario.
 
-Mira la plantilla del perfil (fíjate en la regla de oro del comentario):
+Lee la plantilla del perfil y responde para ti: ¿qué rutas concede? ¿aparece /etc/shadow? ¿aparece alguna regla de red?
 
 ```plain
 cat /root/lab5/perfil-plantilla
 ```{{exec}}
 
-Instálalo y cárgalo en **complain** con `apparmor_parser` (el cargador real del kernel; `-r` recarga, `-C` fuerza complain). En este modo AppArmor no bloquea, solo registra lo que *habría* negado. Es la red de seguridad para no romper la aplicación.
+**Predice** antes de cargarlo. Vas a cargarlo en modo **complain**: AppArmor no bloquea, solo registra lo que *habría* negado.
 
-> En este nodo `aa-complain` / `aa-enforce` fallan con `ERROR: Operation {'runbindable'}…`: son utilidades en Python que leen todos los perfiles del sistema y tropiezan con uno que no entienden. `apparmor_parser` es lo que esas utilidades llaman por debajo.
+```plain
+ct-predigo a1 ____
+```{{copy}}
+
+(La pregunta exacta te la da `ct-predigo a1` sin respuesta.) Ahora instala el perfil y cárgalo: `apparmor_parser` es el cargador de perfiles; `-r` recarga si ya existía y `-C` fuerza el modo complain.
 
 ```plain
 cp /root/lab5/perfil-plantilla /etc/apparmor.d/opt.condor.leer-config
@@ -26,14 +36,17 @@ apparmor_parser -r -C /etc/apparmor.d/opt.condor.leer-config
 aa-status | grep -A1 complain
 ```{{exec}}
 
-Ejercita el servicio otra vez y lee lo que AppArmor anotó:
+Ejercita el servicio otra vez. Fíjate: ¿cambió algo respecto a la primera vez?
 
 ```plain
 /opt/condor/leer-config --config; /opt/condor/leer-config --secreto; /opt/condor/leer-config --ping
-ct-denegaciones
 ```{{exec}}
 
-Las líneas `ALLOWED` sobre `/etc/shadow` y sobre la red son la prueba: en enforce, eso cae. Verifica y captura:
+Lo que cambió no se ve en la salida del programa: se ve en lo que AppArmor anotó. Lee las líneas `ALLOWED` y responde: ¿qué va a caer cuando pases a enforce?
+
+```plain
+ct-denegaciones
+```{{exec}}
 
 ```plain
 ct-check A

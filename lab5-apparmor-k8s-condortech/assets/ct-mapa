@@ -9,6 +9,20 @@ rojo(){ printf '\033[31m%s\033[0m\n' "$*"; }
 amar(){ printf '\033[33m%s\033[0m\n' "$*"; }
 eco(){ printf '\033[2m   $ %s\033[0m\n' "$*"; }   # muestra el comando real que la herramienta ejecuta
 guardar(){ grep -q "$2" $LAB/.banderas 2>/dev/null || echo "$1 $2" >> $LAB/.banderas; }
+PRED=$LAB/.predicciones
+pregunta(){ case "$1" in
+  a1) echo "Con el perfil cargado en COMPLAIN, ¿--secreto va a poder leer /etc/shadow?  →  ct-predigo a1 si|no";;
+  a2) echo "Con el perfil en ENFORCE, ¿cuál de los tres va a seguir funcionando: config, secreto o ping?  →  ct-predigo a2 config|secreto|ping";;
+  a3) echo "Para que --registrar funcione, ¿qué permiso necesita el perfil sobre /var/log/condor/app.log: r, w o rw?  →  ct-predigo a3 r|w|rw";;
+  b1) echo "Antes de mirar los manifiestos: de los 3 Pods de tienda, ¿cuántos crees que corren como root dentro del contenedor?  →  ct-predigo b1 0|1|2|3";;
+  b2) echo "Con readOnlyRootFilesystem: true, ¿el contenedor va a poder escribir en /tmp?  →  ct-predigo b2 si|no";;
+  b3) echo "Si quitas TODAS las capabilities (drop ALL), ¿el Pod carrito sigue arrancando?  →  ct-predigo b3 si|no";;
+ esac; }
+prediccion(){ grep "^$1 " $PRED 2>/dev/null | tail -1 | cut -d' ' -f2-; }
+exigir_prediccion(){ # $1=id ; sale con 1 si no hay predicción registrada
+  if [ -z "$(prediccion $1)" ]; then amar "Antes de verificar, piensa y registra tu predicción:"; echo "   $(pregunta $1)"; return 1; fi; }
+comparar(){ # $1=id $2=lo que pasó $3=por qué
+  echo; echo "   Tu predicción ($1): $(prediccion $1)   ·   Lo que pasó: $2"; echo "   Por qué: $3"; }
 modo_perfil(){ # imprime complain | enforce | ninguno
   if aa-status 2>/dev/null | awk '/profiles are in enforce mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo enforce
   elif aa-status 2>/dev/null | awk '/profiles are in complain mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo complain
@@ -18,6 +32,7 @@ cat <<'EOF'
 ══════════════════════════════════════════════════════════════════
  LAB 5 · CÓNDOR TECH — Confinar con AppArmor y asegurar la Zona B
 ══════════════════════════════════════════════════════════════════
+ Regla del lab: predice → ejecuta → compara. ct-check no entrega bandera sin tu predicción.
  BLOQUE A · AppArmor (el servicio /opt/condor/leer-config)
    A1  mínimo   2 pts  perfil cargado en COMPLAIN, la app sigue funcionando   → ct-check A
    A2  completo 2 pts  perfil en ENFORCE, /etc/shadow DENEGADO, app funciona  → ct-check A
@@ -29,12 +44,11 @@ cat <<'EOF'
    B3  extra    1 pt   + sin capabilities, sin escalada, seccomp por defecto  → ct-check B
    Rescate B    1 pt   ct-rescate B  (despliega el carrito endurecido)
 ──────────────────────────────────────────────────────────────────
- Herramientas: ct-listo · ct-mapa · ct-denegaciones · ct-check A|B
+ Herramientas: ct-predigo <id> <resp> (ANTES de cada paso) · ct-listo · ct-mapa · ct-denegaciones · ct-check A|B
                ct-responder b1 <resp> · ct-pista <a1|a2|a3|b1|b2|b3>
                ct-bench [fails] · ct-rescate A|B · ct-retomar <bandera> · ct-banderas
  Archivos:     /root/lab5/perfil-plantilla   /root/lab5/carrito-plantilla.yaml
  AppArmor:     apparmor_parser -r -C <perfil> = complain · apparmor_parser -r <perfil> = enforce
-               (aa-complain/aa-enforce fallan en este nodo; apparmor_parser es lo que llaman por debajo)
  Las banderas se suben en CTFd, categoría «Lab 5». Cada quien en su cuenta.
 ══════════════════════════════════════════════════════════════════
 EOF

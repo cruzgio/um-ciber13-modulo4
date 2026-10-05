@@ -11,7 +11,11 @@ Los dos bloques son **independientes**: si llegas tarde al B, no necesitas haber
 
 Rescate de cada bloque: 1 pt. Las banderas se suben en **CTFd → categoría Lab 5**, cada quien en su propia cuenta.
 
-El escenario se está preparando (1–3 minutos: instala AppArmor y kube-bench, despliega la Zona B). Mientras tanto, mira el mapa:
+## La regla de este lab: predice → ejecuta → compara
+
+Antes de cada paso clave hay una pregunta. Registras lo que crees que va a pasar con `ct-predigo` (no se califica, puedes equivocarte), ejecutas, y `ct-check` te muestra tu predicción al lado de lo que pasó y por qué. **Sin predicción no hay bandera.** Copiar y pegar te lleva al resultado; predecir es lo que te lleva a entenderlo.
+
+El escenario se está preparando (1–3 minutos). Mientras tanto, el mapa:
 
 ```plain
 ct-mapa

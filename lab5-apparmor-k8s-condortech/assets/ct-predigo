@@ -28,15 +28,15 @@ modo_perfil(){ # imprime complain | enforce | ninguno
   elif aa-status 2>/dev/null | awk '/profiles are in complain mode/{f=1;next} /profiles are in/{f=0} f' | grep -q 'opt/condor/leer-config'; then echo complain
   else echo ninguno; fi; }
 
-id="$1"; shift; r="$*"
-[ -z "$id" ] || [ -z "$r" ] && { echo "uso: ct-responder b1 <nombre del Pod privilegiado>"; exit 2; }
+# Registra lo que crees que va a pasar ANTES de ejecutar el paso. No se califica: ct-check te la muestra al lado de lo que pasó.
+id="$1"; r="$(echo "$2" | tr 'A-Z' 'a-z' | tr -d '¿?.')"
 case "$id" in
- b1) exigir_prediccion b1 || exit 1
-     eco "comparo tu respuesta con el Pod que la Zona B despliega con privileged: true"
-     if [ "$r" = "carrito-legacy" ] || [ "$r" = "tienda/carrito-legacy" ]; then
-        verde "✔ B1 mínimo: ese es el Pod privilegiado de la Zona B"; verde "   bandera B1: $B_B1"; guardar B1 $B_B1
-        comparar b1 "2 de 3 corren como root (pagos-worker no dice nada y carrito-legacy tampoco: sin runAsNonRoot, el contenedor arranca como root); solo catalogo declara runAsNonRoot" "el valor por defecto es root: la seguridad del Pod hay que escribirla, no viene sola"
-        echo "Siguiente: endurecerlo (paso B2). Mira también el Pod pagos-worker: ¿qué tiene en sus variables de entorno?"
-     else rojo "✘ no. Busca privileged: true →  kubectl get pods -A -o json | jq -r '.items[] | select(.spec.containers[].securityContext.privileged==true) | .metadata.name'"; fi ;;
- *) echo "En este lab solo b1 se responde con ct-responder; A1–A3 y B2–B3 se verifican con ct-check." ;;
+ a1|b2|b3) echo "$r" | grep -Eq '^(si|sí|no)$' || { echo "Responde si o no.  $(pregunta $id)"; exit 2; }; r=$(echo "$r" | sed 's/sí/si/');;
+ a2) echo "$r" | grep -Eq '^(config|secreto|ping)$' || { echo "Responde config, secreto o ping.  $(pregunta $id)"; exit 2; };;
+ a3) echo "$r" | grep -Eq '^(r|w|rw|a)$' || { echo "Responde r, w o rw.  $(pregunta $id)"; exit 2; };;
+ b1) echo "$r" | grep -Eq '^[0-3]$' || { echo "Responde un número de 0 a 3.  $(pregunta $id)"; exit 2; };;
+ "") echo "uso: ct-predigo <a1|a2|a3|b1|b2|b3> <respuesta>"; echo; for i in a1 a2 a3 b1 b2 b3; do echo " $i · $(pregunta $i)"; done; exit 2;;
+ *) echo "id no reconocido. uso: ct-predigo <a1|a2|a3|b1|b2|b3> <respuesta>"; exit 2;;
 esac
+echo "$id $r" >> $PRED
+verde "✔ predicción registrada ($id: $r). Ahora ejecuta el paso y compara con ct-check."

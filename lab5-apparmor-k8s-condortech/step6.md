@@ -5,6 +5,12 @@ Tres candados más, los que piden la guía NSA/CISA y el CIS Benchmark:
 - en el contenedor: `allowPrivilegeEscalation: false` y `capabilities: {drop: ["ALL"]}`
 - en el Pod (nivel `spec`): `seccompProfile: {type: RuntimeDefault}`
 
+**Predice**: si le quitas todas las capabilities a un proceso que solo duerme, ¿sigue arrancando? Piensa qué hacen las capabilities antes de responder.
+
+```plain
+ct-predigo b3 ____
+```{{copy}}
+
 ```plain
 nano /root/lab5/carrito-plantilla.yaml
 ```{{exec}}
@@ -22,7 +28,7 @@ ct-bench
 ct-bench fails
 ```{{exec}}
 
-No hay bandera por kube-bench: su salida **es insumo del artefacto**. Elige los 3 `[FAIL]` que más riesgo representan para la Zona B y anótalos con su número de control (p. ej. `1.2.x`, `4.2.x`) — van a la checklist del *Estándar de despliegue seguro de contenedores*. La salida completa queda en `/root/lab5/kube-bench.txt`.
+No hay bandera por kube-bench: su salida **es insumo del artefacto**. Elige los 3 `[FAIL]` que más riesgo representan para la Zona B y, para cada uno, escribe en una frase qué podría hacer un atacante si no se corrige. Van a la checklist del *Estándar de despliegue seguro de contenedores* con su número de control (p. ej. `1.2.x`, `4.2.x`). La salida completa queda en `/root/lab5/kube-bench.txt`.
 
 ```plain
 ct-banderas
