@@ -12,11 +12,13 @@ Tres Pods. **Predice** antes de abrir ningún manifiesto: ¿cuántos de los tres
 ct-predigo b1 ____
 ```{{copy}}
 
-Ahora investiga. Uno de los tres está lanzado con `privileged: true` (y algo más): es la Intro de hoy hecha realidad, ese contenedor puede leer el disco del nodo. Abre el manifiesto de cada uno y busca `securityContext`, `hostPID`, `hostPath` y `env`:
+Ahora investiga. Uno de los tres está lanzado con `privileged: true` (y algo más): es la Intro de hoy hecha realidad, ese contenedor puede leer el disco del nodo. Abre el manifiesto de cada uno. `-o yaml` devuelve `spec` (lo que se pidió) y `status` (lo que el clúster reporta); hoy solo importa `spec`. Este filtro deja a la vista las líneas que deciden si un contenedor puede tocar el nodo:
 
 ```plain
-kubectl get pod NOMBRE -n tienda -o yaml
+kubectl get pod NOMBRE -n tienda -o yaml | grep -nE 'securityContext|privileged|runAsNonRoot|hostPID|hostPath|env:' -A2
 ```{{copy}}
+
+(Reemplaza NOMBRE y repite con los tres. Si quieres ver el manifiesto entero: `kubectl get pod NOMBRE -n tienda -o yaml`.)
 
 Si prefieres preguntarle al clúster de una, `ct-pista b1` tiene la consulta con `jq`. Responde con el nombre del Pod privilegiado:
 
