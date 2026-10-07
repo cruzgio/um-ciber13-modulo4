@@ -12,7 +12,7 @@ guardar(){ grep -q "$2" $LAB/.banderas 2>/dev/null || echo "$1 $2" >> $LAB/.band
 PRED=$LAB/.predicciones
 pregunta(){ case "$1" in
   a1) echo "Con el perfil cargado en COMPLAIN, ¿--secreto va a poder leer /etc/shadow?  →  ct-predigo a1 si|no";;
-  a2) echo "Con el perfil en ENFORCE, ¿cuál de los tres va a seguir funcionando: config, secreto o ping?  →  ct-predigo a2 config|secreto|ping";;
+  a2) echo "Con el perfil en ENFORCE, ¿--secreto va a poder leer /etc/shadow?  →  ct-predigo a2 si|no";;
   a3) echo "Para que --registrar funcione, ¿qué permiso necesita el perfil sobre /var/log/condor/app.log: r, w o rw?  →  ct-predigo a3 r|w|rw";;
   b1) echo "Antes de mirar los manifiestos: de los 3 Pods de tienda, ¿cuántos crees que corren como root dentro del contenedor?  →  ct-predigo b1 0|1|2|3";;
   b2) echo "Con readOnlyRootFilesystem: true, ¿el contenedor va a poder escribir en /tmp?  →  ct-predigo b2 si|no";;
