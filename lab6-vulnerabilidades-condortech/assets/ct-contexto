@@ -1,0 +1,45 @@
+#!/bin/bash
+# Lab 6 · Cóndor Tech · herramienta del escenario
+EST=/root/lab6/.estado; mkdir -p "$EST"
+verde(){ printf "\033[32m%s\033[0m\n" "$*"; }; rojo(){ printf "\033[31m%s\033[0m\n" "$*"; }; amar(){ printf "\033[33m%s\033[0m\n" "$*"; }; azul(){ printf "\033[36m%s\033[0m\n" "$*"; }
+F_A1="CT{l6-a-min-48b974}"; F_A2="CT{l6-a-com-53bde8}"; F_A3="CT{l6-a-ext-06979c}"; F_AR="CT{l6-a-res-9aa817}"
+F_B1="CT{l6-b-min-8837f9}"; F_B2="CT{l6-b-com-756d2f}"; F_B3="CT{l6-b-ext-0f2024}"; F_BR="CT{l6-b-res-1415cc}"
+guardar(){ grep -q "^$1=" "$EST/banderas" 2>/dev/null || echo "$1=$2" >> "$EST/banderas"; }
+# escaneo: en Killercoda es trivy image; CT_MODO_FS=<dir> permite probar la lógica sin docker
+escanear_json(){ # $1 = tag (legacy|v2)
+  local tag="$1" out="/root/lab6/escaneo-$1.json"
+  if [ -n "$CT_MODO_FS" ]; then trivy fs --scanners vuln --format json -q "$CT_MODO_FS/$tag" > "$out" 2>/dev/null
+  else trivy image --scanners vuln --format json -q "carrito:$tag" > "$out" 2>/dev/null; fi
+  echo "$out"
+}
+
+cat <<'EOF'
+══════════════════════════════════════════════════════════════════════
+  CÓNDOR TECH · Ficha de contexto del servicio «carrito» (lo que el
+  escáner NO sabe y la auditoría va a preguntar)
+══════════════════════════════════════════════════════════════════════
+  Servicio      : carrito (Flask + gunicorn) · imagen carrito:legacy
+  Exposición    : INTERNET, puerto 8080, sin WAF ni proxy delante.
+                  gunicorn atiende directo a los clientes.
+  Entrada       : POST /importar recibe un carrito guardado en YAML
+                  que envía el navegador del cliente (cualquiera).
+  Salida        : POST /cobrar envía el carrito a la pasarela de pagos
+                  con el TOKEN de Cóndor Tech en la cabecera
+                  Authorization (biblioteca requests).
+  No se usa     : la función de miniaturas (Pillow) nunca se activó
+                  (FEATURE_MINIATURAS=0). El sandbox de plantillas de
+                  Jinja2 no se usa (no hay plantillas de usuario).
+  Datos         : tarjetas NO (las maneja la pasarela); sí nombres,
+                  direcciones y el token de pagos.
+  Dueño         : Zona B (equipo de tienda). Ventana de cambios: martes.
+──────────────────────────────────────────────────────────────────────
+  Criterio de priorización de Cóndor Tech (de mayor a menor peso):
+   1. ¿Se alcanza desde fuera sin credenciales?       (exposición)
+   2. ¿El código vulnerable se EJECUTA en este servicio? (uso real)
+   3. ¿Hay exploit público / está en CISA KEV?         (explotabilidad)
+   4. ¿Qué pierdo si pasa? (RCE > robo de token > DoS) (impacto)
+   5. CVSS base — desempata, no decide.
+══════════════════════════════════════════════════════════════════════
+EOF
+echo "Siguiente:  ct-escanear legacy        (ver el ruido completo)"
+echo "            ct-escanear legacy --paquetes   (resumen por paquete)"

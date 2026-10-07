@@ -1,0 +1,52 @@
+#!/bin/bash
+# Lab 6 · Cóndor Tech · herramienta del escenario
+EST=/root/lab6/.estado; mkdir -p "$EST"
+verde(){ printf "\033[32m%s\033[0m\n" "$*"; }; rojo(){ printf "\033[31m%s\033[0m\n" "$*"; }; amar(){ printf "\033[33m%s\033[0m\n" "$*"; }; azul(){ printf "\033[36m%s\033[0m\n" "$*"; }
+F_A1="CT{l6-a-min-48b974}"; F_A2="CT{l6-a-com-53bde8}"; F_A3="CT{l6-a-ext-06979c}"; F_AR="CT{l6-a-res-9aa817}"
+F_B1="CT{l6-b-min-8837f9}"; F_B2="CT{l6-b-com-756d2f}"; F_B3="CT{l6-b-ext-0f2024}"; F_BR="CT{l6-b-res-1415cc}"
+guardar(){ grep -q "^$1=" "$EST/banderas" 2>/dev/null || echo "$1=$2" >> "$EST/banderas"; }
+# escaneo: en Killercoda es trivy image; CT_MODO_FS=<dir> permite probar la lógica sin docker
+escanear_json(){ # $1 = tag (legacy|v2)
+  local tag="$1" out="/root/lab6/escaneo-$1.json"
+  if [ -n "$CT_MODO_FS" ]; then trivy fs --scanners vuln --format json -q "$CT_MODO_FS/$tag" > "$out" 2>/dev/null
+  else trivy image --scanners vuln --format json -q "carrito:$tag" > "$out" 2>/dev/null; fi
+  echo "$out"
+}
+
+tag="${1:-legacy}"; modo="$2"
+case "$tag" in legacy|v2) ;; *) echo "uso: ct-escanear legacy|v2 [--paquetes|--top|--json]"; exit 2;; esac
+[ -f $EST/db.ok ] || { amar "La base de CVE aún se está descargando. Espera y repite (ct-listo)."; exit 1; }
+if [ -z "$CT_MODO_FS" ] && ! docker image inspect "carrito:$tag" >/dev/null 2>&1; then rojo "No existe la imagen carrito:$tag. Para v2: edita /root/lab6/carrito/requirements.txt y ejecuta ct-construir"; exit 1; fi
+J=$(escanear_json "$tag")
+case "$modo" in
+ --json) echo "JSON en $J"; exit 0 ;;
+ --paquetes|--top)
+  python3 - "$J" "$modo" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1])); modo=sys.argv[2]
+rows=[]
+for r in d.get('Results',[]):
+    for v in r.get('Vulnerabilities',[]):
+        sc=max([x.get('V3Score',0) or 0 for x in v.get('CVSS',{}).values()] or [0])
+        rows.append((v['PkgName'],v['InstalledVersion'],v['VulnerabilityID'],v['Severity'],sc,v.get('FixedVersion') or '—',r.get('Type','')))
+if modo=='--paquetes':
+    agg={}
+    for p,ver,cve,sev,sc,fix,t in rows:
+        a=agg.setdefault((p,ver,t),{'C':0,'H':0,'M':0,'L':0,'fix':fix}); a[sev[0]]=a.get(sev[0],0)+1
+    print(f"{'PAQUETE':<22}{'VERSIÓN':<16}{'TIPO':<10}{'CRIT':>5}{'HIGH':>5}{'MED':>5}{'LOW':>5}")
+    for (p,ver,t),a in sorted(agg.items(), key=lambda kv:(-(kv[1]['C']*10+kv[1]['H']),kv[0])):
+        print(f"{p:<22}{ver:<16}{t:<10}{a['C']:>5}{a['H']:>5}{a['M']:>5}{a['L']:>5}")
+    print(f"\nTotal: {len(rows)} hallazgos. Pregunta clave: ¿cuáles de estos paquetes se EJECUTAN de verdad? → ct-contexto")
+else:
+    rows.sort(key=lambda x:(-x[4],x[0]))
+    print(f"{'#':<3}{'CVSS':<6}{'SEV':<9}{'CVE':<22}{'PAQUETE':<14}{'VERSIÓN':<10}{'CORRIGE EN'}")
+    for i,(p,ver,cve,sev,sc,fix,t) in enumerate(rows[:12],1):
+        print(f"{i:<3}{sc:<6}{sev:<9}{cve:<22}{p:<14}{ver:<10}{fix}")
+    print("\nEsto es ordenar por CVSS. ¿Es el orden de RIESGO para Cóndor Tech? Compara con ct-contexto.")
+PY
+  ;;
+ *)
+  if [ -n "$CT_MODO_FS" ]; then trivy fs --scanners vuln --severity CRITICAL,HIGH -q "$CT_MODO_FS/$tag"; else trivy image --scanners vuln --severity CRITICAL,HIGH -q "carrito:$tag"; fi
+  echo; azul "Solo CRITICAL y HIGH. Resumen por paquete: ct-escanear $tag --paquetes · ordenado por CVSS: ct-escanear $tag --top · JSON: $J"
+  ;;
+esac

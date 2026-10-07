@@ -1,0 +1,52 @@
+{
+  "title": "Lab 6 · Gestión de vulnerabilidades con Trivy — Cóndor Tech",
+  "description": "Escanear, priorizar por contexto, remediar y verificar: el carrito legacy de Cóndor Tech bajo auditoría.",
+  "details": {
+    "intro": {
+      "text": "intro.md",
+      "background": "background.sh",
+      "foreground": "foreground.sh"
+    },
+    "steps": [
+      {
+        "title": "A1 · Escanear y ver el ruido",
+        "text": "step1.md"
+      },
+      {
+        "title": "A2 · Priorizar con contexto",
+        "text": "step2.md"
+      },
+      {
+        "title": "A3 · La trampa del CVSS",
+        "text": "step3.md"
+      },
+      {
+        "title": "B1 · Remediar el crítico",
+        "text": "step4.md"
+      },
+      {
+        "title": "B2 · Cerrar el segundo y verificar",
+        "text": "step5.md"
+      },
+      {
+        "title": "B3 · Quitar lo que sobra",
+        "text": "step6.md"
+      }
+    ],
+    "finish": {
+      "text": "finish.md"
+    },
+    "assets": {
+      "host01": [
+        {
+          "file": "*",
+          "target": "/root/lab6-assets/",
+          "chmod": "+x"
+        }
+      ]
+    }
+  },
+  "backend": {
+    "imageid": "ubuntu"
+  }
+}

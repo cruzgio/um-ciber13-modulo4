@@ -1,0 +1,38 @@
+#!/bin/bash
+# Lab 6 · Cóndor Tech · herramienta del escenario
+EST=/root/lab6/.estado; mkdir -p "$EST"
+verde(){ printf "\033[32m%s\033[0m\n" "$*"; }; rojo(){ printf "\033[31m%s\033[0m\n" "$*"; }; amar(){ printf "\033[33m%s\033[0m\n" "$*"; }; azul(){ printf "\033[36m%s\033[0m\n" "$*"; }
+F_A1="CT{l6-a-min-48b974}"; F_A2="CT{l6-a-com-53bde8}"; F_A3="CT{l6-a-ext-06979c}"; F_AR="CT{l6-a-res-9aa817}"
+F_B1="CT{l6-b-min-8837f9}"; F_B2="CT{l6-b-com-756d2f}"; F_B3="CT{l6-b-ext-0f2024}"; F_BR="CT{l6-b-res-1415cc}"
+guardar(){ grep -q "^$1=" "$EST/banderas" 2>/dev/null || echo "$1=$2" >> "$EST/banderas"; }
+# escaneo: en Killercoda es trivy image; CT_MODO_FS=<dir> permite probar la lógica sin docker
+escanear_json(){ # $1 = tag (legacy|v2)
+  local tag="$1" out="/root/lab6/escaneo-$1.json"
+  if [ -n "$CT_MODO_FS" ]; then trivy fs --scanners vuln --format json -q "$CT_MODO_FS/$tag" > "$out" 2>/dev/null
+  else trivy image --scanners vuln --format json -q "carrito:$tag" > "$out" 2>/dev/null; fi
+  echo "$out"
+}
+
+id="$1"; shift; r="$(echo "$*" | tr 'a-z' 'A-Z' | tr -d ' ')"
+[ -z "$id" ] || [ -z "$r" ] && { echo "uso: ct-responder a1|a2|a3 <respuesta>"; exit 2; }
+case "$id" in
+ a1) case "$r" in CVE-2020-14343|PYYAML)
+        verde "✔ A1 mínimo: PyYAML 5.3.1 con yaml.load(FullLoader) sobre datos del cliente = ejecución remota de código desde internet, sin credenciales."
+        verde "   bandera A1: $F_A1"; guardar A1 $F_A1
+        echo "Siguiente (A2): ¿qué CVE del escaneo hace que el token de la pasarela de pagos termine en manos de un tercero? → ct-responder a2 CVE-..." ;;
+      CVE-2021-*|CVE-2022-2281*|CVE-2023-4863) rojo "✘ Ese CVE es de Pillow: CVSS altísimo, pero ese código no se ejecuta en el carrito (ct-contexto). Riesgo ≠ CVSS." ;;
+      *) rojo "✘ No es ese. Pregunta: ¿qué paquete procesa datos que llegan de INTERNET sin credenciales y permite ejecutar código? Pista: ct-pista a1" ;;
+     esac ;;
+ a2) case "$r" in CVE-2018-18074)
+        verde "✔ A2 completo: requests 2.19.1 reenvía la cabecera Authorization si la pasarela redirige de HTTPS a HTTP; el token de pagos viaja en claro a quien controle el destino."
+        verde "   bandera A2: $F_A2"; guardar A2 $F_A2
+        echo "Siguiente (A3): ¿qué paquete concentra más CRITICAL/HIGH y sin embargo NO debe entrar al top 5? → ct-responder a3 <paquete>" ;;
+      *) rojo "✘ No. Busca en el escaneo el paquete que el carrito usa para hablar con la pasarela y el CVE que habla de 'Authorization' o 'redirect'. Pista: ct-pista a2" ;;
+     esac ;;
+ a3) case "$r" in PILLOW)
+        verde "✔ A3 extra: Pillow trae decenas de hallazgos, pero FEATURE_MINIATURAS=0: ese código nunca se ejecuta. Se quita de la imagen, no se parcha (eso es el B3)."
+        verde "   bandera A3: $F_A3"; guardar A3 $F_A3 ;;
+      *) rojo "✘ No. Mira ct-escanear legacy --paquetes y cruza con la línea «No se usa» de ct-contexto." ;;
+     esac ;;
+ *) echo "uso: ct-responder a1|a2|a3 <respuesta>. El bloque B se verifica con ct-check." ;;
+esac

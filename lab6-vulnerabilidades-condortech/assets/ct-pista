@@ -1,0 +1,49 @@
+#!/bin/bash
+# Lab 6 · Cóndor Tech · herramienta del escenario
+EST=/root/lab6/.estado; mkdir -p "$EST"
+verde(){ printf "\033[32m%s\033[0m\n" "$*"; }; rojo(){ printf "\033[31m%s\033[0m\n" "$*"; }; amar(){ printf "\033[33m%s\033[0m\n" "$*"; }; azul(){ printf "\033[36m%s\033[0m\n" "$*"; }
+F_A1="CT{l6-a-min-48b974}"; F_A2="CT{l6-a-com-53bde8}"; F_A3="CT{l6-a-ext-06979c}"; F_AR="CT{l6-a-res-9aa817}"
+F_B1="CT{l6-b-min-8837f9}"; F_B2="CT{l6-b-com-756d2f}"; F_B3="CT{l6-b-ext-0f2024}"; F_BR="CT{l6-b-res-1415cc}"
+guardar(){ grep -q "^$1=" "$EST/banderas" 2>/dev/null || echo "$1=$2" >> "$EST/banderas"; }
+# escaneo: en Killercoda es trivy image; CT_MODO_FS=<dir> permite probar la lógica sin docker
+escanear_json(){ # $1 = tag (legacy|v2)
+  local tag="$1" out="/root/lab6/escaneo-$1.json"
+  if [ -n "$CT_MODO_FS" ]; then trivy fs --scanners vuln --format json -q "$CT_MODO_FS/$tag" > "$out" 2>/dev/null
+  else trivy image --scanners vuln --format json -q "carrito:$tag" > "$out" 2>/dev/null; fi
+  echo "$out"
+}
+
+case "$1" in
+a1) cat <<'EOF'
+A1 · El crítico que SÍ importa
+  Ejecuta: ct-escanear legacy --paquetes  → mira qué paquetes tienen CRITICAL.
+  Cruza con ct-contexto: ¿cuál procesa la entrada YAML que manda el cliente?
+  En el escaneo busca ese paquete y copia el CVE de severidad CRITICAL que menciona
+  «arbitrary code execution». Responde: ct-responder a1 CVE-XXXX-XXXXX
+EOF
+;;
+a2) cat <<'EOF'
+A2 · El que roba el token
+  El carrito habla con la pasarela usando la biblioteca «requests».
+  Busca sus hallazgos:  grep -A3 -i requests /root/lab6/escaneo-legacy.json | head   (o ct-escanear legacy --top)
+  El CVE correcto habla de una redirección HTTPS→HTTP que no quita la cabecera Authorization.
+EOF
+;;
+a3) echo "A3 · Mira la columna CRIT/HIGH de ct-escanear legacy --paquetes y la línea «No se usa» de ct-contexto. Responde con el nombre del paquete." ;;
+b1) cat <<'EOF'
+B1 · Remediar PyYAML
+  1. nano /root/lab6/carrito/requirements.txt  → cambia PyYAML==5.3.1 por PyYAML==6.0.2
+  2. ct-construir        (reconstruye carrito:v2 y la pone en el 8080)
+  3. ct-escanear v2 --paquetes   → PyYAML ya no aparece
+  4. ct-check
+EOF
+;;
+b2) cat <<'EOF'
+B2 · Remediar requests sin romper el servicio
+  requests==2.32.3 y urllib3==2.2.3 (las últimas que soportan Python 3.8). Luego ct-construir y ct-check.
+  Si la construcción falla por conflicto de versiones, lee el error de pip: dice qué par no es compatible.
+EOF
+;;
+b3) echo "B3 · Borra la línea Pillow==8.0.0 de requirements.txt (app.py no la importa salvo con FEATURE_MINIATURAS=1). ct-construir y ct-check." ;;
+*) echo "uso: ct-pista a1|a2|a3|b1|b2|b3" ;;
+esac
