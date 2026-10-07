@@ -20,7 +20,9 @@ case "$id" in
         verde "✔ A1 mínimo: PyYAML 5.3.1 con yaml.load(FullLoader) sobre datos del cliente = ejecución remota de código desde internet, sin credenciales."
         verde "   bandera A1: $F_A1"; guardar A1 $F_A1
         echo "Siguiente (A2): ¿qué CVE del escaneo hace que el token de la pasarela de pagos termine en manos de un tercero? → ct-responder a2 CVE-..." ;;
-      CVE-2021-*|CVE-2022-2281*|CVE-2023-4863) rojo "✘ Ese CVE es de Pillow: CVSS altísimo, pero ese código no se ejecuta en el carrito (ct-contexto). Riesgo ≠ CVSS." ;;
+      CVE-2020-35654|CVE-2021-*|CVE-2022-*|CVE-2023-4863|CVE-2023-44271|CVE-2023-50447|CVE-2024-28219|CVE-2026-54058) rojo "✘ Ese CVE es de Pillow: CVSS altísimo, pero ese código no se ejecuta en el carrito (ct-uso, línea 35). Riesgo ≠ CVSS." ;;
+      CVE-2024-34069) rojo "✘ Casi: es de Werkzeug y permite ejecutar código, pero solo con el depurador de Werkzeug encendido, que en producción con gunicorn está apagado. Además es HIGH. Busca el CRITICAL en código que sí recibe datos del cliente." ;;
+      CVE-2025-27516|CVE-2019-10906|CVE-2024-*) rojo "✘ Mira ct-uso: ese paquete casi no se ejecuta en el carrito o no recibe datos del cliente. Busca el CRITICAL que sí." ;;
       *) rojo "✘ No es ese. Pregunta: ¿qué paquete procesa datos que llegan de INTERNET sin credenciales y permite ejecutar código? Pista: ct-pista a1" ;;
      esac ;;
  a2) case "$r" in CVE-2018-18074)

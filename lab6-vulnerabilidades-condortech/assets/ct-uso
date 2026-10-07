@@ -1,0 +1,29 @@
+#!/bin/bash
+# Lab 6 · Cóndor Tech · ct-uso: dónde se usa cada paquete en el carrito y quién le manda datos
+cmd(){ if [ -t 1 ]; then printf "\033[36m  \$ %s\033[0m\n" "$*"; else printf "  \$ %s\n" "$*"; fi; }
+APP=/root/lab6/carrito/app.py; DF=/root/lab6/carrito/Dockerfile
+
+echo "▶ Esto es lo que se ejecuta por debajo: buscar en el código dónde aparece cada paquete"
+cmd "grep -n -E '^import|^from|yaml\.load|requests\.post|FEATURE_MINIATURAS\")|PIL' $APP | cut -c1-80"
+grep -n -E '^import|^from|yaml\.load|requests\.post|FEATURE_MINIATURAS"\)|PIL' "$APP" | cut -c1-80 | sed 's/^/    /'
+cmd "grep -n CMD $DF"
+grep -n CMD "$DF" | sed 's/^/    /'
+echo
+cat <<'EOF'
+Mapa de uso del carrito (orden alfabético). El escáner NO sabe nada de esto:
+
+  PAQUETE   ¿SE EJECUTA?  DÓNDE                                  QUIÉN LE MANDA DATOS
+  Flask     Sí            todas las rutas (líneas 4, 11–27)      cualquier cliente de internet
+  gunicorn  Sí            Dockerfile CMD: atiende el puerto 8080 cualquier cliente, directo
+  Jinja2    Casi no       viene con Flask; no hay plantillas     nadie
+  Pillow    NO            línea 35, solo si FEATURE_MINIATURAS=1 nadie (la función está apagada)
+  PyYAML    Sí            línea 18: yaml.load() en /importar     cualquier cliente, sin credenciales
+  requests  Sí            línea 27: requests.post() en /cobrar   sale hacia la pasarela con el token
+  urllib3   Sí            lo usa requests por debajo             igual que requests
+  Werkzeug  Sí            Flask lo usa para leer cada petición   cualquier cliente de internet
+
+Ahora cruza este mapa con:  ct-escanear legacy --paquetes
+  Riesgo más alto = severidad alta  +  se ejecuta  +  recibe datos de internet
+                    +  lo que permite: ejecutar código > robar el token > tumbar el servicio
+  Para ver qué permite un CVE:  ct-escanear legacy --paquete <nombre>  (columna IMPACTO)
+EOF

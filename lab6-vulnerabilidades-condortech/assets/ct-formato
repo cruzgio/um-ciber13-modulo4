@@ -9,6 +9,18 @@ arg = sys.argv[4].lower() if len(sys.argv) > 4 else ""
 d = json.load(open(ruta))
 SEVS = ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
 
+def impacto(v):
+    t = ((v.get("Title") or "") + " " + (v.get("Description") or "")).lower()
+    reglas = [(("code execution", "execute arbitrary", "arbitrary code", "remote code", "command injection", "execute code"), "ejecutar código"),
+              (("smuggling",), "contrabando HTTP"),
+              (("authorization header", "credential", "proxy-authorization", "cookie", "disclos", "leak"), "fuga de credenciales/datos"),
+              (("denial of service", "dos ", "resource", "consumption", "infinite", "crash", "hang", "exhaust"), "denegación de servicio"),
+              (("overflow", "out-of-bounds", "use-after-free", "memory corruption"), "corrupción de memoria"),
+              (("bypass", "sandbox"), "evasión de controles")]
+    for claves, nombre in reglas:
+        if any(c in t for c in claves): return nombre
+    return "otro (ver descripción)"
+
 def cvss(v):
     return max([x.get("V3Score") or 0 for x in (v.get("CVSS") or {}).values()] or [0])
 
@@ -44,17 +56,17 @@ elif modo == "paquetes":
     for p, a in sorted(agg.items(), key=lambda kv: (-(kv[1]['CRITICAL'] * 100 + kv[1]['HIGH']), kv[0].lower())):
         print(f"  {p:<14}{a['ver']:<11}{a['CRITICAL']:>5}{a['HIGH']:>5}{a['MEDIUM']:>5}{a['LOW']:>5}")
     print(f"\n  (+ {len(so)} hallazgos del sistema operativo debian, fuera de esta tabla)")
-    print("  Pregunta: ¿cuáles de estos paquetes se EJECUTAN de verdad? → ct-contexto")
+    print("  Pregunta: ¿cuáles de estos paquetes se EJECUTAN de verdad? → ct-uso")
 
 elif modo == "top":
     rows = sorted(py, key=lambda v: (-cvss(v), v["PkgName"].lower()))[:12]
     print(f"Los 12 hallazgos de Python con mayor CVSS en carrito:{tag}\n")
-    print(f"  {'#':<3}{'CVSS':<6}{'SEV':<10}{'CVE':<18}{'PAQUETE':<11}{'CORRIGE EN'}")
+    print(f"  {'#':<3}{'CVSS':<5}{'SEV':<9}{'CVE':<17}{'PAQUETE':<10}{'CORRIGE':<9}IMPACTO")
     for i, v in enumerate(rows, 1):
         fix = (v.get("FixedVersion") or "—").split(",")[0]
-        print(f"  {i:<3}{cvss(v):<6}{v['Severity']:<10}{v['VulnerabilityID']:<18}{v['PkgName'][:10]:<11}{fix}")
+        print(f"  {i:<3}{cvss(v):<5}{v['Severity'][:8]:<9}{v['VulnerabilityID']:<17}{v['PkgName'][:9]:<10}{fix[:8]:<9}{impacto(v)}")
     print("\n  Esto es ordenar por CVSS. ¿Es el orden de RIESGO para Cóndor Tech?")
-    print("  Compara con ct-contexto: ¿esos paquetes se ejecutan y están expuestos?")
+    print("  Cruza con ct-uso: ¿esos paquetes se ejecutan y reciben datos de internet?")
 
 elif modo == "paquete":
     lst = [v for v in py + so if v["PkgName"].lower() == arg]
@@ -64,12 +76,14 @@ elif modo == "paquete":
         print("Paquetes de Python con hallazgos: " + ", ".join(nombres))
         sys.exit(0)
     lst.sort(key=lambda v: (-cvss(v), v["VulnerabilityID"]))
-    print(f"{lst[0]['PkgName']} {lst[0]['InstalledVersion']} en carrito:{tag} · {len(lst)} hallazgos\n")
-    print(f"  {'CVSS':<5}{'SEV':<9}{'CVE':<17}{'CORRIGE EN':<11}TÍTULO")
+    print(f"{lst[0]['PkgName']} {lst[0]['InstalledVersion']} en carrito:{tag} · {len(lst)} hallazgo{'s' if len(lst) != 1 else ''}\n")
+    print(f"  {'CVSS':<5}{'SEV':<9}{'CVE':<17}{'CORRIGE':<9}{'IMPACTO':<27}TÍTULO")
     for v in lst[:14]:
         fix = (v.get("FixedVersion") or "—").split(",")[0][:10]
-        tit = (v.get("Title") or "").replace("\n", " ")[:34]
-        print(f"  {cvss(v):<5}{v['Severity'][:8]:<9}{v['VulnerabilityID']:<17}{fix:<11}{tit}")
+        tit = (v.get("Title") or "").replace("\n", " ").split(": ", 1)[-1][:26]
+        print(f"  {cvss(v):<5}{v['Severity'][:8]:<9}{v['VulnerabilityID']:<17}{fix[:8]:<9}{impacto(v):<27}{tit}")
+    print("\n  IMPACTO = traducción de lo que dice el CVE (título + descripción). Léelo con ct-uso:")
+    print("  un impacto grave en código que no se ejecuta no es urgente.")
     if len(lst) > 14:
         print(f"  … y {len(lst) - 14} más (están en el JSON).")
 

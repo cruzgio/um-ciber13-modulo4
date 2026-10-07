@@ -18,7 +18,19 @@ Más de 500 hallazgos, la mayoría del sistema operativo de la imagen base. Conc
 ct-escanear legacy --paquetes
 ```{{exec}}
 
-**Pregunta A1:** de todo esto, ¿cuál es el CVE de **mayor riesgo para Cóndor Tech**? No el de mayor CVSS: el que se alcanza desde internet, sin credenciales, en código que el carrito **sí ejecuta**, y que permite ejecutar código. Cruza la columna *Entrada* de `ct-contexto` con los paquetes CRITICAL.
+Ahora lo que el escáner no sabe: **dónde se usa cada paquete en el código del carrito y quién le manda datos** (la herramienta te muestra el `grep` que hace por debajo):
+
+```plain
+ct-uso
+```{{exec}}
+
+**Pregunta A1:** ¿cuál es el CVE de **mayor riesgo para Cóndor Tech**? No el de mayor CVSS. Haz el embudo:
+
+1. En `ct-escanear legacy --paquetes`: ¿qué paquetes tienen algún **CRITICAL**?
+2. En `ct-uso`: de esos, ¿cuál **se ejecuta** y **recibe datos de cualquier cliente de internet**?
+3. En `ct-escanear legacy --paquete <ese paquete>`: mira la columna **IMPACTO** del CVE CRITICAL. ¿Permite ejecutar código?
+
+Ese CVE es tu respuesta.
 
 ```plain
 ct-responder a1 CVE-XXXX-XXXXX

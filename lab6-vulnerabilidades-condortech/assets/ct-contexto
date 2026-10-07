@@ -41,5 +41,6 @@ cat <<'EOF'
    5. CVSS base — desempata, no decide.
 ══════════════════════════════════════════════════════════════════════
 EOF
-echo "Siguiente:  ct-escanear legacy        (ver el ruido completo)"
+echo "Siguiente:  ct-uso                    (dónde se usa cada paquete en el código)"
+echo "            ct-escanear legacy        (resumen del escaneo)"
 echo "            ct-escanear legacy --paquetes   (resumen por paquete)"
