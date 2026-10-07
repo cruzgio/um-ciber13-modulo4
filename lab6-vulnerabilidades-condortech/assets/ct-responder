@@ -29,7 +29,9 @@ case "$id" in
         verde "✔ A2 completo: requests 2.19.1 reenvía la cabecera Authorization si la pasarela redirige de HTTPS a HTTP; el token de pagos viaja en claro a quien controle el destino."
         verde "   bandera A2: $F_A2"; guardar A2 $F_A2
         echo "Siguiente (A3): ¿qué paquete concentra más CRITICAL/HIGH y sin embargo NO debe entrar al top 5? → ct-responder a3 <paquete>" ;;
-      *) rojo "✘ No. Busca en el escaneo el paquete que el carrito usa para hablar con la pasarela y el CVE que habla de 'Authorization' o 'redirect'. Pista: ct-pista a2" ;;
+      CVE-2023-32681) rojo "✘ Casi: es de requests y filtra credenciales, pero solo la cabecera Proxy-Authorization cuando se usa un proxy. El carrito no usa proxy. Busca el de la redirección HTTPS→HTTP." ;;
+      CVE-2024-47081) rojo "✘ Casi: es de requests, pero filtra credenciales guardadas en un archivo .netrc. El token del carrito va en la cabecera Authorization. Busca el de la redirección HTTPS→HTTP." ;;
+      *) rojo "✘ No. El token lo lleva requests (ct-uso, línea 27). Mira ct-escanear legacy --paquete requests y busca el CVE de redirección HTTPS→HTTP. Pista: ct-pista a2" ;;
      esac ;;
  a3) case "$r" in PILLOW)
         verde "✔ A3 extra: Pillow trae decenas de hallazgos, pero FEATURE_MINIATURAS=0: ese código nunca se ejecuta. Se quita de la imagen, no se parcha (eso es el B3)."

@@ -24,6 +24,7 @@ cat <<'EOF'
   Entrada       : POST /importar recibe un carrito guardado en YAML
                   que envía el navegador del cliente (cualquiera).
   Salida        : POST /cobrar envía el carrito a la pasarela de pagos
+                  por HTTPS (cifrado)
                   con el TOKEN de Cóndor Tech en la cabecera
                   Authorization (biblioteca requests).
   No se usa     : la función de miniaturas (Pillow) nunca se activó

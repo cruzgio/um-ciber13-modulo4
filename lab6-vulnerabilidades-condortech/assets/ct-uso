@@ -18,7 +18,7 @@ Mapa de uso del carrito (orden alfabético). El escáner NO sabe nada de esto:
   Jinja2    Casi no       viene con Flask; no hay plantillas     nadie
   Pillow    NO            línea 35, solo si FEATURE_MINIATURAS=1 nadie (la función está apagada)
   PyYAML    Sí            línea 18: yaml.load() en /importar     cualquier cliente, sin credenciales
-  requests  Sí            línea 27: requests.post() en /cobrar   sale hacia la pasarela con el token
+  requests  Sí            línea 27: requests.post() en /cobrar   lleva el token de pagos a la pasarela
   urllib3   Sí            lo usa requests por debajo             igual que requests
   Werkzeug  Sí            Flask lo usa para leer cada petición   cualquier cliente de internet
 

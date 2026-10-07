@@ -4,7 +4,7 @@ import os, yaml, requests
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
-PASARELA = os.environ.get("PASARELA_URL", "http://pasarela.condortech.local/cobrar")
+PASARELA = os.environ.get("PASARELA_URL", "https://pasarela.condortech.local/cobrar")
 TOKEN = os.environ.get("PASARELA_TOKEN", "ct-token-demo")
 CARRITO = {}
 

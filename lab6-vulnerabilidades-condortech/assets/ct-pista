@@ -24,9 +24,12 @@ EOF
 ;;
 a2) cat <<'EOF'
 A2 · El que roba el token
-  El carrito habla con la pasarela usando la biblioteca «requests».
-  Busca sus hallazgos:  ct-escanear legacy --paquete requests
-  El CVE correcto habla de una redirección HTTPS→HTTP que no quita la cabecera Authorization.
+  1. El carrito manda el token a la pasarela con «requests», por HTTPS (cifrado).
+  2. Si la pasarela responde «redirect: andá a http://…» (sin cifrar), requests 2.19
+     sigue la redirección y VUELVE a mandar el token, ahora en claro.
+  3. Cualquiera en el medio lo lee, como la credencial del pcap de la clase 6.
+  Busca:  ct-escanear legacy --paquete requests
+  → el CVE con IMPACTO «fuga de credenciales» cuyo título habla de «Redirect» HTTPS→HTTP.
 EOF
 ;;
 a3) echo "A3 · Mira la columna CRIT/HIGH de ct-escanear legacy --paquetes y la línea «No se usa» de ct-contexto. Responde con el nombre del paquete." ;;
