@@ -15,6 +15,7 @@ cp /root/lab6-assets/ctfd_access.ejemplo.log /root/lab6/ctfd_access.log
 cp /root/lab6-assets/siem_correlar.py /root/lab6/.estado/siem_correlar.py
 chmod 600 /root/lab6/.estado/* 2>/dev/null
 
+command -v jq >/dev/null 2>&1 || apt-get install -y -q jq
 # 1) Trivy (paquete .deb oficial, versión fija)
 if ! command -v trivy >/dev/null 2>&1; then
   for i in 1 2 3; do

@@ -4,6 +4,7 @@ EST=/root/lab6/.estado; mkdir -p "$EST"
 verde(){ printf "\033[32m%s\033[0m\n" "$*"; }; rojo(){ printf "\033[31m%s\033[0m\n" "$*"; }; amar(){ printf "\033[33m%s\033[0m\n" "$*"; }; azul(){ printf "\033[36m%s\033[0m\n" "$*"; }
 F_A1="CT{l6-a-min-48b974}"; F_A2="CT{l6-a-com-53bde8}"; F_A3="CT{l6-a-ext-06979c}"; F_AR="CT{l6-a-res-9aa817}"
 F_B1="CT{l6-b-min-8837f9}"; F_B2="CT{l6-b-com-756d2f}"; F_B3="CT{l6-b-ext-0f2024}"; F_BR="CT{l6-b-res-1415cc}"
+cmd(){ if [ -t 1 ]; then printf "\033[36m  \$ %s\033[0m\n" "$*"; else printf "  \$ %s\n" "$*"; fi; }
 guardar(){ grep -q "^$1=" "$EST/banderas" 2>/dev/null || echo "$1=$2" >> "$EST/banderas"; }
 # escaneo: en Killercoda es trivy image; CT_MODO_FS=<dir> permite probar la lógica sin docker
 escanear_json(){ # $1 = tag (legacy|v2)
@@ -16,9 +17,17 @@ escanear_json(){ # $1 = tag (legacy|v2)
 # Reconstruye la imagen remediada carrito:v2 desde /root/lab6/carrito y la pone a correr en el 8080
 cd /root/lab6/carrito || exit 1
 if [ -n "$CT_MODO_FS" ]; then echo "(modo prueba sin docker: nada que construir)"; exit 0; fi
-echo "docker build -t carrito:v2 /root/lab6/carrito"
-docker build -t carrito:v2 . 2>&1 | tail -15 || { rojo "✘ La construcción falló. Revisa requirements.txt (¿versión inexistente? ¿Pillow aún referenciado?)"; exit 1; }
+echo "▶ Esto es lo que se ejecuta por debajo:"
+cmd "docker build -t carrito:v2 /root/lab6/carrito"
+set -o pipefail
+if ! docker build -t carrito:v2 . 2>&1 | tail -15; then
+  rojo "✘ La construcción falló. Lee el error de pip de arriba: dice qué versión no existe o qué par no es compatible."; exit 1
+fi
+set +o pipefail
+cmd "docker rm -f carrito-legacy carrito-v2"
 docker rm -f carrito-legacy carrito-v2 >/dev/null 2>&1
+cmd "docker run -d --name carrito-v2 -p 8080:8080 carrito:v2"
 docker run -d --name carrito-v2 -p 8080:8080 carrito:v2 >/dev/null && sleep 3
+cmd "curl -s localhost:8080/"
 if curl -s -m 3 localhost:8080/ | grep -q '"estado":"ok"'; then verde "✔ carrito:v2 construida y respondiendo en el 8080. Ahora: ct-escanear v2 --paquetes   y   ct-check"
-else rojo "✘ La imagen se construyó pero el servicio no responde: docker logs carrito-v2"; fi
+else rojo "✘ La imagen se construyó pero el servicio no responde. Mira por qué con: docker logs carrito-v2"; exit 1; fi

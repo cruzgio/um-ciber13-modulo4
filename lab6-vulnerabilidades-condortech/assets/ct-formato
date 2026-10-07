@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+# Lab 6 · formatea el JSON de Trivy para que quepa en una pantalla.
+# uso: ct-formato <resumen|paquetes|top|paquete|queda> <escaneo.json> <etiqueta> [nombre_paquete]
+import json, sys
+from collections import defaultdict
+
+modo, ruta, tag = sys.argv[1], sys.argv[2], sys.argv[3]
+arg = sys.argv[4].lower() if len(sys.argv) > 4 else ""
+d = json.load(open(ruta))
+SEVS = ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+
+def cvss(v):
+    return max([x.get("V3Score") or 0 for x in (v.get("CVSS") or {}).values()] or [0])
+
+so, py = [], []
+for r in d.get("Results", []):
+    for v in r.get("Vulnerabilities") or []:
+        (py if r.get("Class") == "lang-pkgs" else so).append(v)
+
+def fila(nombre, lst):
+    c = {s: sum(1 for v in lst if v["Severity"] == s) for s in SEVS}
+    sin = sum(1 for v in lst if not v.get("FixedVersion"))
+    return f"  {nombre:<28}{len(lst):>6}{c['CRITICAL']:>6}{c['HIGH']:>6}{c['MEDIUM']:>6}{c['LOW']:>6}{sin:>8}"
+
+def cab():
+    return f"  {'CAPA':<28}{'TOTAL':>6}{'CRIT':>6}{'HIGH':>6}{'MED':>6}{'LOW':>6}{'SIN FIX':>8}"
+
+if modo == "resumen":
+    print(f"Imagen carrito:{tag} · {len(so) + len(py)} hallazgos en total\n")
+    print(cab())
+    print(fila("Sistema operativo (debian)", so))
+    print(fila("Python (requirements + base)", py))
+    print("\n  SIN FIX = Trivy no conoce una versión que lo corrija.")
+    print("  La capa Python es la que Zona B controla con requirements.txt: es la de hoy.")
+    print("  La capa del SO depende de la imagen base python:3.8 (lo vemos en el cierre).")
+
+elif modo == "paquetes":
+    agg = defaultdict(lambda: {s: 0 for s in SEVS} | {"ver": "", "fix": set()})
+    for v in py:
+        a = agg[v["PkgName"]]; a["ver"] = v["InstalledVersion"]
+        if v["Severity"] in SEVS: a[v["Severity"]] += 1
+    print(f"Paquetes de Python con hallazgos en carrito:{tag}  ({len(py)} hallazgos)\n")
+    print(f"  {'PAQUETE':<14}{'VERSIÓN':<11}{'CRIT':>5}{'HIGH':>5}{'MED':>5}{'LOW':>5}")
+    for p, a in sorted(agg.items(), key=lambda kv: (-(kv[1]['CRITICAL'] * 100 + kv[1]['HIGH']), kv[0].lower())):
+        print(f"  {p:<14}{a['ver']:<11}{a['CRITICAL']:>5}{a['HIGH']:>5}{a['MEDIUM']:>5}{a['LOW']:>5}")
+    print(f"\n  (+ {len(so)} hallazgos del sistema operativo debian, fuera de esta tabla)")
+    print("  Pregunta: ¿cuáles de estos paquetes se EJECUTAN de verdad? → ct-contexto")
+
+elif modo == "top":
+    rows = sorted(py, key=lambda v: (-cvss(v), v["PkgName"].lower()))[:12]
+    print(f"Los 12 hallazgos de Python con mayor CVSS en carrito:{tag}\n")
+    print(f"  {'#':<3}{'CVSS':<6}{'SEV':<10}{'CVE':<18}{'PAQUETE':<11}{'CORRIGE EN'}")
+    for i, v in enumerate(rows, 1):
+        fix = (v.get("FixedVersion") or "—").split(",")[0]
+        print(f"  {i:<3}{cvss(v):<6}{v['Severity']:<10}{v['VulnerabilityID']:<18}{v['PkgName'][:10]:<11}{fix}")
+    print("\n  Esto es ordenar por CVSS. ¿Es el orden de RIESGO para Cóndor Tech?")
+    print("  Compara con ct-contexto: ¿esos paquetes se ejecutan y están expuestos?")
+
+elif modo == "paquete":
+    lst = [v for v in py + so if v["PkgName"].lower() == arg]
+    if not lst:
+        nombres = sorted({v["PkgName"] for v in py}, key=str.lower)
+        print(f"'{arg}' no tiene hallazgos en carrito:{tag}.")
+        print("Paquetes de Python con hallazgos: " + ", ".join(nombres))
+        sys.exit(0)
+    lst.sort(key=lambda v: (-cvss(v), v["VulnerabilityID"]))
+    print(f"{lst[0]['PkgName']} {lst[0]['InstalledVersion']} en carrito:{tag} · {len(lst)} hallazgos\n")
+    print(f"  {'CVSS':<5}{'SEV':<9}{'CVE':<17}{'CORRIGE EN':<11}TÍTULO")
+    for v in lst[:14]:
+        fix = (v.get("FixedVersion") or "—").split(",")[0][:10]
+        tit = (v.get("Title") or "").replace("\n", " ")[:34]
+        print(f"  {cvss(v):<5}{v['Severity'][:8]:<9}{v['VulnerabilityID']:<17}{fix:<11}{tit}")
+    if len(lst) > 14:
+        print(f"  … y {len(lst) - 14} más (están en el JSON).")
+
+elif modo == "queda":
+    agg = defaultdict(int)
+    for v in py: agg[v["PkgName"]] += 1
+    txt = ", ".join(f"{k} ({n})" for k, n in sorted(agg.items(), key=lambda kv: -kv[1])) or "ninguno"
+    print("Lo que queda en Python tras remediar: " + txt)
+    print(f"Más {len(so)} del sistema operativo (imagen base python:3.8).")
+    print("→ No se cierra con pip en esta imagen: la base ya no recibe parches.")
+    print("  Va al ticket como causa raíz o riesgo aceptado. Es la pregunta DIE del cierre.")

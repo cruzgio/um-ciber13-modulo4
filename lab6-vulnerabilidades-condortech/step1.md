@@ -6,13 +6,13 @@ Primero el contexto, que el escáner no conoce:
 ct-contexto
 ```{{exec}}
 
-Ahora el escaneo real de la imagen que está en producción (solo CRITICAL y HIGH; el comando completo es `trivy image --scanners vuln --severity CRITICAL,HIGH carrito:legacy`):
+Ahora el escaneo real de la imagen que está en producción. La herramienta te muestra arriba, en celeste, el comando de Trivy que ejecuta por debajo; la salida completa son cientos de líneas, así que verás un resumen por capas:
 
 ```plain
 ct-escanear legacy
 ```{{exec}}
 
-Demasiado para leer. Agrupa por paquete:
+Más de 500 hallazgos, la mayoría del sistema operativo de la imagen base. Concéntrate en la capa Python, agrupada por paquete:
 
 ```plain
 ct-escanear legacy --paquetes
@@ -24,4 +24,4 @@ ct-escanear legacy --paquetes
 ct-responder a1 CVE-XXXX-XXXXX
 ```{{copy}}
 
-> `ct-pista a1` si no lo ves. Los detalles de un CVE: `trivy image -q --severity CRITICAL carrito:legacy | grep -A2 <CVE>` o el JSON en `/root/lab6/escaneo-legacy.json`.
+> `ct-pista a1` si no lo ves. Todos los CVE de un paquete: `ct-escanear legacy --paquete <nombre>`. Tabla completa de Trivy: `less -S /root/lab6/escaneo-legacy.txt` (q para salir).

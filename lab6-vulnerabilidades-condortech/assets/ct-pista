@@ -18,14 +18,14 @@ a1) cat <<'EOF'
 A1 · El crítico que SÍ importa
   Ejecuta: ct-escanear legacy --paquetes  → mira qué paquetes tienen CRITICAL.
   Cruza con ct-contexto: ¿cuál procesa la entrada YAML que manda el cliente?
-  En el escaneo busca ese paquete y copia el CVE de severidad CRITICAL que menciona
-  «arbitrary code execution». Responde: ct-responder a1 CVE-XXXX-XXXXX
+  Mira sus CVE con: ct-escanear legacy --paquete <ese paquete>
+  y copia el de severidad CRITICAL. Responde: ct-responder a1 CVE-XXXX-XXXXX
 EOF
 ;;
 a2) cat <<'EOF'
 A2 · El que roba el token
   El carrito habla con la pasarela usando la biblioteca «requests».
-  Busca sus hallazgos:  grep -A3 -i requests /root/lab6/escaneo-legacy.json | head   (o ct-escanear legacy --top)
+  Busca sus hallazgos:  ct-escanear legacy --paquete requests
   El CVE correcto habla de una redirección HTTPS→HTTP que no quita la cabecera Authorization.
 EOF
 ;;
