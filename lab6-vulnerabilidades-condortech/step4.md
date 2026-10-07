@@ -8,11 +8,19 @@ Edita la versión de PyYAML (la versión que corrige está en la columna *CORRIG
 nano /root/lab6/carrito/requirements.txt
 ```{{exec}}
 
-Reconstruye y pon a correr la imagen remediada (equivale a `docker build -t carrito:v2 . && docker run -d -p 8080:8080 carrito:v2`):
+Reconstruye y pon a correr la imagen remediada:
 
 ```plain
 ct-construir
 ```{{exec}}
+
+`ct-construir` te muestra en celeste los tres comandos que ejecuta. Si prefieres hacerlo a mano, son estos, en este orden (el legacy se detiene porque ocupa el puerto 8080):
+
+```plain
+docker build -t carrito:v2 /root/lab6/carrito
+docker rm -f carrito-legacy
+docker run -d --name carrito-v2 -p 8080:8080 carrito:v2
+```{{copy}}
 
 Re-escanea y verifica — el servicio tiene que seguir respondiendo, si no, no remediaste: rompiste.
 
