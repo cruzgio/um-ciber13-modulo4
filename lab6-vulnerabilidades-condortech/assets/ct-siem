@@ -1,23 +1,44 @@
 #!/bin/bash
-# Lab 6 · Cóndor Tech · herramienta del escenario
-EST=/root/lab6/.estado; mkdir -p "$EST"
-verde(){ printf "\033[32m%s\033[0m\n" "$*"; }; rojo(){ printf "\033[31m%s\033[0m\n" "$*"; }; amar(){ printf "\033[33m%s\033[0m\n" "$*"; }; azul(){ printf "\033[36m%s\033[0m\n" "$*"; }
-F_A1="CT{l6-a-min-48b974}"; F_A2="CT{l6-a-com-53bde8}"; F_A3="CT{l6-a-ext-06979c}"; F_AR="CT{l6-a-res-9aa817}"
-F_B1="CT{l6-b-min-8837f9}"; F_B2="CT{l6-b-com-756d2f}"; F_B3="CT{l6-b-ext-0f2024}"; F_BR="CT{l6-b-res-1415cc}"
-guardar(){ grep -q "^$1=" "$EST/banderas" 2>/dev/null || echo "$1=$2" >> "$EST/banderas"; }
-# escaneo: en Killercoda es trivy image; CT_MODO_FS=<dir> permite probar la lógica sin docker
-escanear_json(){ # $1 = tag (legacy|v2)
-  local tag="$1" out="/root/lab6/escaneo-$1.json"
-  if [ -n "$CT_MODO_FS" ]; then trivy fs --scanners vuln --format json -q "$CT_MODO_FS/$tag" > "$out" 2>/dev/null
-  else trivy image --scanners vuln --format json -q "carrito:$tag" > "$out" 2>/dev/null; fi
-  echo "$out"
-}
-
-# Demo del docente: de evento crudo a alerta correlacionada. Fuente: el log de acceso del CTFd del curso.
+# Lab 6 · Cóndor Tech · ct-siem: demo del docente, de evento crudo a alerta correlacionada
+cmd(){ if [ -t 1 ]; then printf "\033[36m  \$ %s\033[0m\n" "$*"; else printf "  \$ %s\n" "$*"; fi; }
 LOG="${CT_SIEM_LOG:-/root/lab6/ctfd_access.log}"
+PY=/root/lab6/.estado/siem_correlar.py
+mkdir -p /root/lab6/.estado
+# Si falta el correlador o el log de ejemplo, se recuperan sin depender de nada externo
+[ -s "$PY" ] || cp /root/lab6-assets/siem_correlar.py "$PY" 2>/dev/null
+if [ ! -s "$LOG" ] && [ -z "$CT_SIEM_LOG" ]; then
+  cp /root/lab6-assets/ctfd_access.ejemplo.txt "$LOG" 2>/dev/null || python3 - "$LOG" >/dev/null <<'PYGEN'
+import random,datetime as D
+random.seed(6);L=[];f=lambda t:t.strftime("%d/%b/%Y:%H:%M:%S +0000")
+ips=["190.64.12.33","179.26.100.8","200.40.77.21","186.52.9.140","167.57.201.5"]
+ps=["/","/login","/challenges","/scoreboard","/api/v1/challenges","/themes/core/static/css/main.css","/users","/notifications"]
+t=D.datetime(2026,9,11,3,42,0)
+for i in range(140):
+    t+=D.timedelta(seconds=random.randint(20,900));ip=random.choice(ips);p=random.choice(ps)
+    L.append(f'{ip} - - [{f(t)}] "GET {p} HTTP/1.1" 200 {random.randint(800,9000)} "-" "Mozilla/5.0"')
+L.append(f'143.244.162.11 - - [{f(D.datetime(2026,9,11,7,49,12))}] "GET / HTTP/1.1" 200 1532 "-" "Mozilla/5.0 zgrab/0.x"')
+r=["/.env","/wp-login.php","/admin","/phpmyadmin/","/.git/config","/api/","/config.php","/backup.zip","/.aws/credentials","/xmlrpc.php"]
+for i in range(60):
+    tt=D.datetime(2026,9,11,9,15,0)+D.timedelta(seconds=i*0.66)
+    L.append(f'45.142.212.61 - - [{f(tt)}] "GET {r[i%10]}{"" if i<10 else str(i)} HTTP/1.1" 404 {random.randint(150,400)} "-" "python-requests/2.31"')
+for i in range(25):
+    tt=D.datetime(2026,9,11,14,2,0)+D.timedelta(seconds=i*4.5)
+    L.append(f'91.240.118.7 - - [{f(tt)}] "POST /login HTTP/1.1" 401 312 "-" "curl/8.4.0"')
+L.sort(key=lambda l:D.datetime.strptime(l.split("[")[1].split("]")[0],"%d/%b/%Y:%H:%M:%S +0000"))
+open(__import__("sys").argv[1],"w").write("\n".join(L)+"\n");print("log creado:",len(L),"líneas")
+PYGEN
+fi
+[ -s "$LOG" ] || { echo "No encuentro el log: $LOG"; exit 1; }
+[ -s "$PY" ] || { echo "No encuentro el correlador: $PY"; exit 1; }
 case "$1" in
- crudo)      echo "== 1) Evento crudo: lo que escribe el servidor, tal cual =="; shuf -n 8 --random-source=<(yes) "$LOG" 2>/dev/null || head -8 "$LOG"; echo; echo "Total de líneas: $(wc -l < "$LOG"). Nadie lee esto a mano." ;;
- normalizar) python3 /root/lab6/.estado/siem_correlar.py normalizar "$LOG" ;;
- correlar)   python3 /root/lab6/.estado/siem_correlar.py correlar "$LOG" ;;
+ crudo)
+  echo "▶ Esto es lo que se ejecuta por debajo:"
+  cmd "head -8 $LOG ; wc -l < $LOG"
+  echo; echo "== 1) Evento crudo: lo que escribe el servidor, tal cual =="
+  head -8 "$LOG"; echo; echo "Total de líneas: $(wc -l < "$LOG"). Nadie lee esto a mano." ;;
+ normalizar|correlar)
+  echo "▶ Esto es lo que se ejecuta por debajo:"
+  cmd "python3 $PY $1 $LOG"; echo
+  python3 "$PY" "$1" "$LOG" ;;
  *) echo "uso: ct-siem crudo | normalizar | correlar     (CT_SIEM_LOG=/ruta/otro.log para otro archivo)" ;;
 esac

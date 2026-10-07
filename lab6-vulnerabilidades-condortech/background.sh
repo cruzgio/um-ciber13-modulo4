@@ -11,7 +11,7 @@ cp /root/lab6-assets/app.py /root/lab6/carrito/
 cp /root/lab6-assets/requirements.legacy.txt /root/lab6/carrito/requirements.txt
 cp /root/lab6-assets/Dockerfile /root/lab6/carrito/Dockerfile
 cp /root/lab6-assets/requirements.remediado.txt /root/lab6/.estado/requirements.remediado.txt
-cp /root/lab6-assets/ctfd_access.ejemplo.log /root/lab6/ctfd_access.log
+cp /root/lab6-assets/ctfd_access.ejemplo.txt /root/lab6/ctfd_access.log
 cp /root/lab6-assets/siem_correlar.py /root/lab6/.estado/siem_correlar.py
 chmod 600 /root/lab6/.estado/* 2>/dev/null
 
