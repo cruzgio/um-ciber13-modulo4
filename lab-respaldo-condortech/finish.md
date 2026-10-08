@@ -10,7 +10,7 @@ ct-banderas
 
 - Un repositorio **cifrado** cuya llave vive fuera del repositorio.
 - Una restauración **verificada hash por hash** y tu primer **RTO medido** (el certificado).
-- Una copia **inmutable** que resistió un borrado con credenciales válidas.
+- La prueba de que el respaldo en el mismo servidor **cae con el servidor**, y una copia **inmutable** que sobrevivió a la segunda ola.
 
 ## Para la Clase 13 (EL DÍA)
 

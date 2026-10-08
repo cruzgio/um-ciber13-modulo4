@@ -1,6 +1,6 @@
-# Bloque B — La copia que el atacante no puede borrar
+# Bloque B — La segunda ola
 
-> El ransomware moderno busca y borra los respaldos **antes** de cifrar. Con las credenciales de respaldo en la mano, el atacante hace `restic forget` y adiós. La defensa: una copia **inmutable** (*append-only*): se puede escribir, nunca borrar.
+> El atacante del Bloque A **nunca se fue**. El ransomware moderno no se conforma con cifrar los datos: busca los respaldos que están a su alcance y los destruye primero. Tu respaldo del Bloque A vive **en el mismo servidor**. Hoy vas a comprobar qué pasa con él… y vas a tener lista una copia que el atacante **no puede borrar**.
 
 ## 0. Si no terminaste el Bloque A
 
@@ -20,7 +20,9 @@ rest-server --path /srv/inmutable --append-only --no-auth --listen 127.0.0.1:808
 
 (`--no-auth` es solo para el laboratorio; en producción va con usuario y contraseña o detrás de TLS).
 
-## 2. Respalda hacia la copia inmutable
+## 2. Respalda el ERP hacia la copia inmutable
+
+Misma llave de Cóndor Tech, otro destino:
 
 ```
 restic -r rest:http://127.0.0.1:8080/erp -p /root/llave-condortech.txt init
@@ -30,34 +32,40 @@ restic -r rest:http://127.0.0.1:8080/erp -p /root/llave-condortech.txt init
 restic -r rest:http://127.0.0.1:8080/erp -p /root/llave-condortech.txt backup /srv/condortech/erp
 ```{{exec}}
 
-## 3. Ahora eres el atacante: intenta borrar el respaldo
-
-Toma el ID del snapshot y trata de olvidarlo:
-
-```
-restic -r rest:http://127.0.0.1:8080/erp -p /root/llave-condortech.txt snapshots
-```{{exec}}
-
-```
-restic -r rest:http://127.0.0.1:8080/erp -p /root/llave-condortech.txt forget <ID_DEL_SNAPSHOT>
-```{{copy}}
-
-Debe fallar con **`403 Forbidden`** (si ves el mensaje repetirse, corta con `Ctrl+C`: el servidor ya dijo que no). Confirma que el snapshot sigue ahí:
-
-```
-restic -r rest:http://127.0.0.1:8080/erp -p /root/llave-condortech.txt unlock; restic -r rest:http://127.0.0.1:8080/erp -p /root/llave-condortech.txt snapshots
-```{{exec}}
-
-(`unlock` quita el candado que el atacante dejó a medias; los candados son lo único que un servidor *append-only* sí deja borrar).
-
-## 4. Reclama la bandera B Inmutable
-
-`ct-check b1` repite el ataque por su cuenta (un `DELETE` directo por HTTP) y comprueba que el servidor lo rechace:
+Comprueba que la copia está lista (y que rechaza el borrado):
 
 ```
 ct-check b1
 ```{{exec}}
 
+## 3. La segunda ola
+
+```
+ct-ransom
+```{{exec}}
+
+Lee lo que hace el atacante: cifra el ERP, **encuentra tu respaldo local y lo cifra**, e intenta borrar la copia inmutable.
+
+## 4. Intenta recuperar con el respaldo local
+
+```
+restic -r /srv/respaldo/erp -p /root/llave-condortech.txt restore latest --target /srv/restaurado
+```{{exec}}
+
+No funciona. El respaldo que vive en el mismo servidor cayó con el servidor.
+
+## 5. Recupera desde la copia inmutable
+
+```
+restic -r rest:http://127.0.0.1:8080/erp -p /root/llave-condortech.txt restore latest --target /srv/restaurado
+```{{exec}}
+
+```
+ct-rto
+```{{exec}}
+
+`ct-rto` verifica hash por hash, mide el RTO de la segunda ola, vuelve a poner el ERP en producción, agrega la segunda ola a tu certificado y te entrega la bandera **B Inmutable**.
+
 > **Sello DIE — Immutable:** esto es el pilar *Immutable* aplicado a la recuperación. En la nube el equivalente es *Object Lock* (S3), *immutability policies* (Azure Blob) o *retention lock* (GCS). Lo que no se puede borrar, no se puede extorsionar.
 
-¿Atascado? `ct-pista b1` · ¿Sin tiempo? `ct-rescate B`
+¿Atascado? `ct-pista b1` / `ct-pista b2` · ¿Sin tiempo? `ct-rescate B`

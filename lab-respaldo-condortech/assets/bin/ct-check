@@ -21,19 +21,29 @@ case "$1" in
   bandera "A Mínimo" "$F_A1" ;;
  b1)
   info "Auditoría del Bloque B:"
-  run "pgrep -af rest-server | grep -q -- --append-only" && ok "rest-server corriendo en modo append-only" || { no "No hay rest-server con --append-only. Pista: ct-pista b1"; exit 1; }
+  run "pgrep -a -x rest-server | grep -q -- --append-only" && ok "rest-server corriendo en modo append-only" || { no "No hay rest-server con --append-only. Pista: ct-pista b1"; exit 1; }
   run "curl -fs http://127.0.0.1:8080/erp/config -o /dev/null" && ok "Repositorio remoto responde en :8080" || { no "El repositorio rest:http://127.0.0.1:8080/erp no existe o el puerto no responde"; exit 1; }
   info "Limpio el candado (lock) que pudo dejar el atacante al cortar su comando:"
   run "restic -r $REPO_B unlock >/dev/null 2>&1" || true
   echo -e "${D}   \$ restic -r $REPO_B snapshots --json | jq length${Z}"
   N=$(nsnap $REPO_B)
   [ "${N:-0}" -ge 1 ] && ok "Snapshots en la copia inmutable: $N" || { no "La copia inmutable no tiene snapshots todavía"; exit 1; }
+  echo -e "${D}   \$ restic -r $REPO_B ls latest | grep -c '.locked'${Z}"
+  L=$(restic -r $REPO_B ls latest 2>/dev/null | grep -c '\.locked')
+  if [ "$L" -gt 0 ]; then
+    no "Tu copia inmutable contiene $L archivos CIFRADOS: respaldaste el ERP después del ataque sin recuperarlo."
+    echo "   Un respaldo de datos ya cifrados no sirve. Recupera el ERP (ct-retomar <bandera A>) y vuelve a hacer el backup."
+    exit 1
+  fi
+  ok "La copia inmutable tiene datos limpios (ningún archivo .locked)"
   ID=$(primer_snap $REPO_B)
   info "Ahora el auditor juega al atacante: borra el snapshot directamente por HTTP"
   echo -e "${D}   \$ curl -X DELETE http://127.0.0.1:8080/erp/snapshots/$ID${Z}"
   CODE=$(curl -s -o /dev/null -w '%{http_code}' -X DELETE http://127.0.0.1:8080/erp/snapshots/$ID)
   if [ "$CODE" = "403" ]; then ok "Intento de borrado rechazado por el servidor (HTTP $CODE)"; else no "El servidor permitió borrar (HTTP $CODE): la copia NO es inmutable"; exit 1; fi
   run "restic -r $REPO_B snapshots" >/dev/null; [ "$(nsnap $REPO_B)" -ge 1 ] && ok "El snapshot sigue ahí después del ataque"
-  bandera "B Inmutable" "$F_B1" ;;
- *) echo "Uso: ct-check <a1|b1>   (la bandera A Completo la emite ct-rto)";;
+  echo; ok "Copia inmutable lista y probada contra borrado."
+  echo -e "${A}Ahora el atacante vuelve: ejecuta ct-ransom (segunda ola).${Z} La bandera B Inmutable la entrega ct-rto cuando restaures."
+  [ -f $CT/bloque_a_ok ] || echo "   (Primero termina o retoma el Bloque A: ct-retomar <bandera A>)" ;;
+ *) echo "Uso: ct-check <a1|b1>   (las banderas A Completo y B Inmutable las emite ct-rto)";;
 esac

@@ -15,11 +15,45 @@ TOTAL=$(wc -l < $CT/manifiesto.original)
 echo -e "${D}   \$ RTO=\$(date +%s) - \$(cat $CT/rto_inicio)${Z}"
 FIN=$(date +%s); INI=$(cat $CT/rto_inicio); RTO=$((FIN-INI))
 printf -v RTOF '%02d:%02d:%02d' $((RTO/3600)) $((RTO%3600/60)) $((RTO%60))
+OLA=$(cat $CT/ola 2>/dev/null || echo 1)
+if [ "$FALLOS" -eq 0 ] && [ "$OLA" = "2" ]; then
+  echo $FIN > $CT/rto_fin
+  ok "Restauración verificada: $TOTAL/$TOTAL archivos con hash idéntico al original (desde $DIR)"
+  info "Compruebo de dónde salió: el repositorio local está cifrado, así que solo pudo salir de la copia inmutable:"
+  run "restic -r $REPO_A -p $LLAVE snapshots >/dev/null 2>&1" && { no "El repositorio local todavía abre: esto no fue la segunda ola. Ejecuta ct-ransom."; exit 1; }
+  ok "Repositorio local inutilizable; copia inmutable con $(nsnap $REPO_B) snapshot(s)."
+  ok "RTO de la segunda ola: $RTOF"
+  if [ "$DIR" != "$E" ]; then
+    info "Vuelvo a poner en producción los datos verificados (recuperar = volver a operar):"
+    run "find $E -name '*.locked' -delete; rm -f $E/NOTA_DE_RESCATE.txt"
+    run "cp -a $DIR/. $E/"
+  fi
+  BF=${CT_RESCATE:+$F_BR}; BF=${BF:-$F_B1}
+  echo -e "${D}   \$ cat >> /root/certificado-restauracion.txt${Z}"
+  cat >> /root/certificado-restauracion.txt <<C
+
+SEGUNDA OLA — el atacante cifró también el respaldo local ($REPO_A)
+Fecha (UTC): $(date -u +%FT%TZ)
+Restaurado desde: $REPO_B (copia inmutable, append-only: rechazó el borrado)
+Archivos verificados: $TOTAL/$TOTAL · RTO medido: $RTOF
+Bandera: $BF
+→ Lección: el respaldo que vive en el mismo servidor cae con el servidor.
+C
+  ok "Certificado actualizado con la segunda ola: /root/certificado-restauracion.txt"
+  bandera "B Inmutable" "$F_B1"
+  exit 0
+fi
 if [ "$FALLOS" -eq 0 ]; then
   echo $FIN > $CT/rto_fin
   ok "Restauración verificada: $TOTAL/$TOTAL archivos con hash idéntico al original (desde $DIR)"
   ok "RTO medido: $RTOF (desde el cifrado hasta la verificación)"
+  if [ "$DIR" != "$E" ]; then
+    info "Vuelvo a poner en producción los datos verificados (recuperar = volver a operar):"
+    run "find $E -name '*.locked' -delete; rm -f $E/NOTA_DE_RESCATE.txt"
+    run "cp -a $DIR/. $E/"
+  fi
   H=$(cd "$DIR" && sha256sum config/erp.conf | cut -c1-16)
+  AF=${CT_RESCATE:+$F_AR}; AF=${AF:-$F_A2}
   echo -e "${D}   \$ cat > /root/certificado-restauracion.txt${Z}"
   cat > /root/certificado-restauracion.txt <<C
 CERTIFICADO DE PRUEBA DE RESTAURACIÓN — Cóndor Tech S.A.S.
@@ -28,11 +62,12 @@ Repositorio: $REPO_A (restic, cifrado AES-256, llave en $LLAVE)
 Archivos verificados: $TOTAL/$TOTAL (sha256 idéntico al manifiesto original)
 RTO medido: $RTOF
 Huella erp.conf: $H
-Bandera: ${CT_RESCATE:+$F_AR}${CT_RESCATE:-$F_A2}
+Bandera: $AF
 → Lleva este certificado y tu llave a la simulación de la Clase 13.
 C
   ok "Certificado guardado en /root/certificado-restauracion.txt (cópialo a tu Runbook)"
   bandera "A Completo" "$F_A2"
+  touch $CT/bloque_a_ok
 else
   no "$FALLOS de $TOTAL archivos NO coinciden con el original. El cronómetro sigue corriendo ($RTOF). Revisa la restauración."
 fi

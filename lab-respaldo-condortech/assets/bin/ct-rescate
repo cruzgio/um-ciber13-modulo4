@@ -6,29 +6,41 @@ export CT_RESCATE=1
 case "$1" in
  A)
   info "RESCATE A — ejecuto el Bloque A por ti. Mira cada comando: es lo que harías a mano."
-  restic -r $REPO_A snapshots >/dev/null 2>&1 || run "restic -r $REPO_A init"
+  rm -f $CT/bloque_a_ok
+  if ! restic -r $REPO_A -p $LLAVE snapshots >/dev/null 2>&1; then
+    [ -d $REPO_A ] && run "rm -rf $REPO_A"
+    run "restic -r $REPO_A -p $LLAVE init"
+  fi
+  if [ ! -f $E/config/erp.conf ]; then
+    restic -r $REPO_B -p $LLAVE snapshots >/dev/null 2>&1 && run "rm -rf $E" && run "restic -r $REPO_B -p $LLAVE restore latest --target / >/dev/null"
+  fi
   run "find $E -name '*.locked' -delete"; run "rm -f $E/NOTA_DE_RESCATE.txt"
-  [ -f $E/config/erp.conf ] || run "restic -r $REPO_A restore latest --target / >/dev/null"
-  run "restic -r $REPO_A backup $E"
-  echo; info "ct-ransom (el ataque):"; ct-ransom
-  echo; run "restic -r $REPO_A restore latest --target /srv/restaurado"
+  [ -f $E/config/erp.conf ] || { no "No quedan datos ni respaldos utilizables: reinicia el escenario."; exit 1; }
+  run "restic -r $REPO_A -p $LLAVE backup $E"
+  echo; info "ct-ransom (primera ola):"; CT_OLA=1 ct-ransom
+  echo; run "restic -r $REPO_A -p $LLAVE restore latest --target /srv/restaurado"
   echo; info "ct-rto (verificación y RTO):"; ct-rto
+  [ -f $CT/rto_fin ] || { no "El rescate A no terminó bien: revisa los mensajes de arriba o reinicia el escenario."; exit 1; }
+  touch $CT/bloque_a_ok
   unset CT_RESCATE; bandera "A Rescate" "$F_AR" ;;
  B)
   info "RESCATE B — ejecuto el Bloque B por ti. Mira cada comando."
   ct-retomar "$F_AR" >/dev/null 2>&1 || ct-rescate A >/dev/null 2>&1
-  if ! pgrep -af rest-server | grep -q -- '--append-only'; then
+  if ! pgrep -a -x rest-server | grep -q -- '--append-only'; then
     echo -e "${D}   \$ rest-server --path /srv/inmutable --append-only --no-auth --listen 127.0.0.1:8080 > /var/log/rest-server.log 2>&1 &${Z}"
     nohup rest-server --path /srv/inmutable --append-only --no-auth --listen 127.0.0.1:8080 >/var/log/rest-server.log 2>&1 &
     for i in $(seq 1 15); do curl -s -o /dev/null http://127.0.0.1:8080/ && break; sleep 1; done
   fi
-  restic -r $REPO_B snapshots >/dev/null 2>&1 || run "restic -r $REPO_B init"
-  run "restic -r $REPO_B backup $E"
-  ID=$(primer_snap $REPO_B)
-  echo; info "Ahora el atacante intenta borrar el snapshot (debe fallar):"
-  run "timeout 20 restic -r $REPO_B forget $ID 2>&1 | grep -m3 403" || true
-  run "restic -r $REPO_B unlock >/dev/null 2>&1" || true
-  echo; info "ct-check b1 (auditoría):"; ct-check b1
+  restic -r $REPO_B -p $LLAVE snapshots >/dev/null 2>&1 || run "restic -r $REPO_B -p $LLAVE init"
+  run "restic -r $REPO_B -p $LLAVE backup $E"
+  echo; info "ct-check b1 (copia inmutable lista):"; ct-check b1
+  echo; info "ct-ransom (segunda ola):"; ct-ransom
+  echo; info "Intento restaurar desde el respaldo local (va a fallar: el atacante lo cifró):"
+  run "restic -r $REPO_A -p $LLAVE restore latest --target /srv/restaurado" || true
+  echo; info "Restauro desde la copia inmutable:"
+  run "restic -r $REPO_B -p $LLAVE restore latest --target /srv/restaurado"
+  echo; info "ct-rto (verificación y RTO de la segunda ola):"; ct-rto
+  { [ -f $CT/rto_fin ] && [ "$(cat $CT/ola)" = "2" ]; } || { no "El rescate B no terminó bien: revisa los mensajes de arriba o reinicia el escenario."; exit 1; }
   unset CT_RESCATE; bandera "B Rescate" "$F_BR" ;;
  *) echo "Uso: ct-rescate <A|B>";;
 esac

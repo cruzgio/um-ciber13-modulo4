@@ -1,6 +1,6 @@
 {
   "title": "Misión de respaldo — Cóndor Tech (Clase 12)",
-  "description": "Respaldo cifrado con restic, simulación de ransomware, restauración con RTO medido y una copia que el atacante no puede borrar.",
+  "description": "Respaldo cifrado con restic, simulación de ransomware, restauración con RTO medido y una segunda ola que solo sobrevive la copia inmutable.",
   "details": {
     "intro": {
       "text": "intro.md",
@@ -16,7 +16,7 @@
         "text": "step2.md"
       },
       {
-        "title": "Bloque B — La copia que el atacante no puede borrar",
+        "title": "Bloque B — La segunda ola",
         "text": "step3.md"
       }
     ],

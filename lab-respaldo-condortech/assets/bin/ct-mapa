@@ -15,12 +15,13 @@ cat <<'M'
     2. ct-ransom  (simula el ataque)      → cronómetro arranca
     3. restic restore  +  ct-rto          → A Completo (2 pts) + certificado
 
-  BLOQUE B — La copia que el atacante no puede borrar
+  BLOQUE B — La segunda ola
     4. ct-retomar <bandera A>            (si no terminaste A)
-    5. rest-server --append-only  +  backup  +  intento de borrado
-       → ct-check b1                      (B Inmutable, 2 pts)
+    5. rest-server --append-only + init + backup → ct-check b1 (copia lista)
+    6. ct-ransom: el atacante vuelve y cifra TAMBIÉN el respaldo local
+    7. restaurar desde la copia inmutable + ct-rto → B Inmutable (2 pts)
 
-  Atajos:  ct-pista <a1|a2|b1>   ct-rescate <A|B>   ct-banderas
+  Atajos:  ct-pista <a1|a2|b1|b2>   ct-rescate <A|B>   ct-banderas
   Contraseña de los repositorios: SIEMPRE la llave de Cóndor Tech.
   Todos los comandos llevan  -p /root/llave-condortech.txt
   Si restic te pide contraseña por teclado: Ctrl+C y agrega el -p.

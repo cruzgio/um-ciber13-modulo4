@@ -18,16 +18,23 @@ PISTA A2 — Restaurar y medir el RTO
 P
  ;;
  b1) cat <<'P'
-PISTA B1 — Copia inmutable con rest-server en modo append-only
+PISTA B1 — Prepara la copia inmutable (rest-server en modo append-only)
   rest-server --path /srv/inmutable --append-only --no-auth --listen 127.0.0.1:8080 \
      > /var/log/rest-server.log 2>&1 &
   restic -r rest:http://127.0.0.1:8080/erp -p /root/llave-condortech.txt init
   restic -r rest:http://127.0.0.1:8080/erp -p /root/llave-condortech.txt backup /srv/condortech/erp
-  # Ahora juega al atacante: intenta borrar el snapshot (toma el ID de 'snapshots')
-  restic -r rest:http://127.0.0.1:8080/erp -p /root/llave-condortech.txt snapshots
-  restic -r rest:http://127.0.0.1:8080/erp -p /root/llave-condortech.txt forget <ID_DEL_SNAPSHOT>
-  # Debe FALLAR con "403 Forbidden" (si lo ves repetirse, corta con Ctrl+C). Luego: ct-check b1
+  ct-check b1      ← comprueba que la copia existe y que rechaza el borrado
+  Luego: ct-ransom (segunda ola) y ct-pista b2
 P
  ;;
- *) echo "Uso: ct-pista <a1|a2|b1>";;
+ b2) cat <<'P'
+PISTA B2 — Sobrevivir a la segunda ola
+  1) Intenta con el respaldo local (va a fallar: el atacante lo cifró):
+     restic -r /srv/respaldo/erp -p /root/llave-condortech.txt restore latest --target /srv/restaurado
+  2) Restaura desde la copia inmutable:
+     restic -r rest:http://127.0.0.1:8080/erp -p /root/llave-condortech.txt restore latest --target /srv/restaurado
+  3) ct-rto   ← verifica, mide el RTO de la segunda ola y entrega B Inmutable
+P
+ ;;
+ *) echo "Uso: ct-pista <a1|a2|b1|b2>";;
 esac
