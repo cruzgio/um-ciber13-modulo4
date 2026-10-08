@@ -10,20 +10,22 @@ find /srv/condortech/erp -type f | sort
 
 restic cifra **todo** (datos, nombres y metadatos) con AES-256; sin la llave, el repositorio es ruido.
 
+> **Importante:** la contraseña del repositorio es la **llave de Cóndor Tech**, no una tuya. Todos los comandos llevan `-p /root/llave-condortech.txt` para que restic la lea del archivo. Si restic te pide contraseña por teclado, es que faltó el `-p`: cancela con Ctrl+C y repite el comando completo.
+
 ```
-restic -r /srv/respaldo/erp init
+restic -r /srv/respaldo/erp -p /root/llave-condortech.txt init
 ```{{exec}}
 
 ## 2. Haz el primer respaldo
 
 ```
-restic -r /srv/respaldo/erp backup /srv/condortech/erp
+restic -r /srv/respaldo/erp -p /root/llave-condortech.txt backup /srv/condortech/erp
 ```{{exec}}
 
 ## 3. Comprueba que existe un snapshot
 
 ```
-restic -r /srv/respaldo/erp snapshots
+restic -r /srv/respaldo/erp -p /root/llave-condortech.txt snapshots
 ```{{exec}}
 
 Anota el **ID** del snapshot y la hora: ese es tu punto de recuperación (tu **RPO** real es el tiempo que pase desde aquí hasta el incidente).

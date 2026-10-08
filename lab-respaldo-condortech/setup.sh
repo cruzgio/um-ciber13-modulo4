@@ -69,10 +69,8 @@ EOF
 cp $CT/manifiesto.sha256 $CT/manifiesto.original
 
 # ---------- 5. Entorno cómodo para el estudiante ----------
-cat >> /root/.bashrc <<'EOF'
-export RESTIC_PASSWORD_FILE=/root/llave-condortech.txt
-export RESTIC_REPOSITORY=/srv/respaldo/erp
-EOF
+echo 'export RESTIC_PASSWORD_FILE=/root/llave-condortech.txt' > /etc/profile.d/condortech.sh
+grep -q RESTIC_PASSWORD_FILE /root/.bashrc || echo 'export RESTIC_PASSWORD_FILE=/root/llave-condortech.txt' >> /root/.bashrc
 
 touch $CT/banderas
 echo "listo" > $CT/estado

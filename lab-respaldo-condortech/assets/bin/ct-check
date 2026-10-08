@@ -4,7 +4,17 @@ case "$1" in
  a1)
   info "Auditoría del Bloque A:"
   run "test -f $REPO_A/config" || { no "No existe un repositorio restic en $REPO_A. Pista: ct-pista a1"; exit 1; }
-  run "restic -r $REPO_A cat config >/dev/null" && ok "Repositorio cifrado abre con la llave de Cóndor Tech" || { no "El repositorio no abre con $LLAVE"; exit 1; }
+  if ! run "restic -r $REPO_A -p $LLAVE cat config >/dev/null"; then
+    no "El repositorio NO abre con la llave de Cóndor Tech ($LLAVE)."
+    echo "   Casi seguro lo creaste con una contraseña tuya (restic te la pidió por teclado porque faltó el -p)."
+    echo "   Arreglo (1 minuto): borra ese repositorio y repítelo con la llave correcta:"
+    echo "      rm -rf $REPO_A"
+    echo "      restic -r $REPO_A -p $LLAVE init"
+    echo "      restic -r $REPO_A -p $LLAVE backup $E"
+    echo "      ct-check a1"
+    exit 1
+  fi
+  ok "Repositorio cifrado abre con la llave de Cóndor Tech"
   echo -e "${D}   \$ restic -r $REPO_A snapshots --json | jq '[.[] | select(.paths[]==\"$E\")] | length'${Z}"
   N=$(nsnap $REPO_A $E)
   [ "${N:-0}" -ge 1 ] && ok "Snapshots de $E: $N" || { no "No hay snapshot de $E. Pista: ct-pista a1"; exit 1; }

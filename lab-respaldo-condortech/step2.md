@@ -19,7 +19,7 @@ ls -R /srv/condortech/erp; cat /srv/condortech/erp/NOTA_DE_RESCATE.txt
 Sin pagar, sin negociar. Restaura el último snapshot en la zona de restauración:
 
 ```
-restic -r /srv/respaldo/erp restore latest --target /srv/restaurado
+restic -r /srv/respaldo/erp -p /root/llave-condortech.txt restore latest --target /srv/restaurado
 ```{{exec}}
 
 (restic conserva la ruta completa: quedará en `/srv/restaurado/srv/condortech/erp`).

@@ -29,4 +29,8 @@ Cuando todo esté en verde:
 ct-mapa
 ```{{exec}}
 
-> La **llave de cifrado** está en `/root/llave-condortech.txt` y ya está cargada en tu shell (`RESTIC_PASSWORD_FILE`). Fíjate dónde vive: **fuera** del repositorio. Es la misma llave que vas a necesitar en la simulación de la Clase 13.
+> La **llave de cifrado** de Cóndor Tech está en `/root/llave-condortech.txt` y todos los comandos la pasan con `-p`. No inventes una contraseña propia: el auditor y la simulación de la Clase 13 abren el repositorio con esa llave. Fíjate dónde vive: **fuera** del repositorio. Anótala:
+
+```
+cat /root/llave-condortech.txt
+```{{exec}}

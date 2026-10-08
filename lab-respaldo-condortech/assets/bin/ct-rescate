@@ -20,7 +20,7 @@ case "$1" in
   if ! pgrep -af rest-server | grep -q -- '--append-only'; then
     echo -e "${D}   \$ rest-server --path /srv/inmutable --append-only --no-auth --listen 127.0.0.1:8080 > /var/log/rest-server.log 2>&1 &${Z}"
     nohup rest-server --path /srv/inmutable --append-only --no-auth --listen 127.0.0.1:8080 >/var/log/rest-server.log 2>&1 &
-    sleep 2
+    for i in $(seq 1 15); do curl -s -o /dev/null http://127.0.0.1:8080/ && break; sleep 1; done
   fi
   restic -r $REPO_B snapshots >/dev/null 2>&1 || run "restic -r $REPO_B init"
   run "restic -r $REPO_B backup $E"

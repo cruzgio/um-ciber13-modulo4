@@ -21,8 +21,8 @@ cat <<'M'
        → ct-check b1                      (B Inmutable, 2 pts)
 
   Atajos:  ct-pista <a1|a2|b1>   ct-rescate <A|B>   ct-banderas
-  Las variables RESTIC_REPOSITORY y RESTIC_PASSWORD_FILE ya están
-  definidas en tu shell para el Bloque A (abre una terminal nueva o
-  ejecuta: source ~/.bashrc).
+  Contraseña de los repositorios: SIEMPRE la llave de Cóndor Tech.
+  Todos los comandos llevan  -p /root/llave-condortech.txt
+  Si restic te pide contraseña por teclado: Ctrl+C y agrega el -p.
 ══════════════════════════════════════════════════════════════
 M
