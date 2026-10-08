@@ -2,7 +2,7 @@
 
 > *El CISO reúne al equipo: «Los indicadores sugieren que alguien nos estudia. Quiero respaldos que un atacante no pueda tocar y un plan escrito para el peor día».*
 
-Hoy vas a proteger el ERP de Cóndor Tech con **restic**: un respaldo cifrado, una pérdida simulada, una restauración con el reloj corriendo (tu primer **RTO real**) y, en el Bloque B, una segunda ola en la que el atacante vuelve por tus respaldos: solo te salva una copia que no se puede borrar.
+El ERP de Cóndor Tech (facturación, inventario y datos de clientes) se respalda cada noche a un disco **en la misma sala** y **nunca se probó una restauración**. La auditoría de octubre pide evidencia de que los respaldos restauran. Hoy vas a protegerlo con **restic**: un respaldo cifrado, una pérdida simulada, una restauración con el reloj corriendo (tu primer **RTO real**) y, en el Bloque B, una segunda ola en la que el atacante vuelve por tus respaldos: solo te salva una copia que no se puede borrar.
 
 ## Doble nivel (ambos valen)
 

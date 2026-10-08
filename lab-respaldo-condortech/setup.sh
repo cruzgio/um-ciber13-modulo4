@@ -34,41 +34,51 @@ chmod 600 /root/llave-condortech.txt
 
 # ---------- 4. Datos críticos del ERP de Cóndor Tech ----------
 E=/srv/condortech/erp
-mkdir -p $E/facturas $E/clientes $E/contratos $E/config
-cat > $E/clientes/clientes.csv <<'EOF'
-id,razon_social,rut,contacto,ciudad
-C-001,Frigorífico del Este S.A.,211234560018,compras@frigoeste.uy,Montevideo
-C-002,Agro Litoral SRL,214455660011,admin@agrolitoral.uy,Salto
-C-003,Textil Pando S.A.,215566770014,finanzas@textilpando.uy,Pando
-C-004,Logística Oriental,216677880017,ops@logoriental.uy,Rivera
-C-005,Clínica Punta del Sol,217788990010,gerencia@clinicapds.uy,Maldonado
+mkdir -p $E/facturas $E/clientes $E/inventario $E/continuidad $E/config
+# Exportación nocturna del ERP (erp-prod) de Cóndor Tech: e-commerce de tecnología y electrodomésticos
+cat > $E/clientes/clientes_muestra.csv <<'EOF'
+id,nombre,documento,email,ciudad,departamento
+CL-0001842,Valentina Rodríguez,4.512.xxx-x,vrodriguez@correo.uy,Montevideo,Montevideo
+CL-0002317,Martín Pereira,3.987.xxx-x,mpereira@correo.uy,Las Piedras,Canelones
+CL-0003105,Lucía Fernández,5.123.xxx-x,lfernandez@correo.uy,Salto,Salto
+CL-0004480,Diego Silva,4.876.xxx-x,dsilva@correo.uy,Maldonado,Maldonado
+CL-0005927,Florencia Gómez,5.341.xxx-x,fgomez@correo.uy,Paysandú,Paysandú
 EOF
 for m in 2026-07 2026-08 2026-09; do
   {
-    echo "nro,fecha,cliente,concepto,monto_uyu,estado"
-    n=1; for c in C-001 C-002 C-003 C-004 C-005; do
-      printf 'F-%s-%03d,%s-%02d,%s,Servicio ERP mensual,%d,pagada\n' "${m//-/}" $n "$m" $((n*3)) "$c" $((48000 + n*3500))
+    echo "nro,fecha,pedido,cliente,total_uyu,medio_pago,estado"
+    n=1; for c in CL-0001842 CL-0002317 CL-0003105 CL-0004480 CL-0005927; do
+      printf 'FV-%s-%05d,%s-%02d,P-%s%04d,%s,%d,%s,facturada\n' "${m//-/}" $n "$m" $((n*5)) "${m//-/}" $((n*137)) "$c" $((12990 + n*8450)) "$( [ $((n%2)) = 1 ] && echo 'tarjeta (pasarela)' || echo transferencia)"
       n=$((n+1))
     done
   } > $E/facturas/facturas_$m.csv
 done
-cat > $E/contratos/contrato_C-001.txt <<'EOF'
-CONTRATO DE SERVICIO ERP — Cóndor Tech S.A.S. / Frigorífico del Este S.A.
-Vigencia: 01-ene-2026 a 31-dic-2026. Nivel de servicio: 99,5 % mensual.
-RPO comprometido con el cliente: 24 horas. RTO comprometido: 8 horas.
-Penalidad por incumplimiento de RTO: 2 % de la facturación mensual por cada hora excedida.
+cat > $E/inventario/stock_cd_montevideo.csv <<'EOF'
+sku,producto,stock,ubicacion
+TV-55-4K-01,Televisor 55" 4K,148,CD-MVD-A12
+HEL-NF-380,Heladera no frost 380 L,62,CD-MVD-C03
+NB-14-I5-16,Notebook 14" i5 16 GB,231,CD-MVD-B07
+LAV-8KG-INV,Lavarropas 8 kg inverter,85,CD-MVD-C11
+CEL-A55-128,Celular gama media 128 GB,412,CD-MVD-B02
 EOF
-cat > $E/contratos/contrato_C-005.txt <<'EOF'
-CONTRATO DE SERVICIO ERP — Cóndor Tech S.A.S. / Clínica Punta del Sol
-Vigencia: 01-mar-2026 a 28-feb-2027. Datos de salud: cifrado en reposo obligatorio.
-RPO comprometido: 4 horas. RTO comprometido: 2 horas.
+cat > $E/continuidad/bia_erp.txt <<'EOF'
+ANÁLISIS DE IMPACTO EN EL NEGOCIO (BIA) — ERP (erp-prod) — Cóndor Tech S.A.S.
+Aprobado por: Gonzalo Techera (CFO) · Revisado por: Mariana Ferreira (CISO)
+Si el ERP se detiene, la tienda sigue vendiendo pero nadie factura ni despacha.
+Volumen: ≈4.200 pedidos por día; picos de 15.000 en fechas de promoción.
+RPO exigido por el negocio: 1 hora (perder más obliga a reconstruir facturas a mano).
+RTO exigido por el negocio: 4 horas (después de eso no sale el despacho del día).
+Situación actual: copias nocturnas al nas-backup, en la misma sala de servidores (RPO real ≈ 24 h).
+Restauraciones completas probadas: ninguna.
+Datos personales de clientes: Ley 18.331 de protección de datos personales — cifrado obligatorio.
 EOF
 cat > $E/config/erp.conf <<'EOF'
-# Configuración del ERP de Cóndor Tech — NO borrar
+# Configuración del ERP de Cóndor Tech (erp-prod) — NO borrar
 db_host=10.10.30.5
 db_name=condor_erp
 listen=0.0.0.0:8443
-backup_window=02:00-04:00
+backup_destino=nas-backup (misma sala)
+backup_ventana=02:00-04:00
 EOF
 # Manifiesto de integridad (sha256 de cada archivo) — lo usa ct-rto para verificar la restauración
 ( cd $E && find . -type f | sort | xargs sha256sum ) > $CT/manifiesto.sha256

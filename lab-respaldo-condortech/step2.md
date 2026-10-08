@@ -42,6 +42,12 @@ cat /root/certificado-restauracion.txt
 
 ## 4. Pregunta para el artefacto
 
-Tu RTO fue de segundos porque el repositorio está en el mismo disco. En el contrato con la Clínica Punta del Sol (`contratos/contrato_C-005.txt`) el RTO comprometido es de 2 horas y el RPO de 4 horas. ¿Qué cambia cuando el respaldo está en otro sitio, es más grande y hay que verificarlo? Anótalo: va en tu Plan de respaldo.
+Tu RTO fue de segundos porque el repositorio está en el mismo disco. Abre el análisis de impacto del ERP:
+
+```
+cat /srv/condortech/erp/continuidad/bia_erp.txt
+```{{exec}}
+
+El negocio exige **RPO de 1 hora** y **RTO de 4 horas**, y hoy los respaldos son **nocturnos** y van a un disco **en la misma sala**. ¿Qué tendría que cambiar en el plan para cumplir lo que pide el CFO? Anótalo: va en tu Plan de respaldo.
 
 ¿Atascado? `ct-pista a2` · ¿Sin tiempo? `ct-rescate A`
