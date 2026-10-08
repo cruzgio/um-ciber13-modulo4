@@ -1,0 +1,33 @@
+#!/bin/bash
+. /usr/local/bin/ct-comun
+case "$1" in
+ a1) cat <<'P'
+PISTA A1 — Repositorio cifrado y primer respaldo
+  restic -r /srv/respaldo/erp init
+  restic -r /srv/respaldo/erp backup /srv/condortech/erp
+  restic -r /srv/respaldo/erp snapshots
+  (la contraseña la toma de RESTIC_PASSWORD_FILE=/root/llave-condortech.txt)
+P
+ ;;
+ a2) cat <<'P'
+PISTA A2 — Restaurar y medir el RTO
+  Después de ct-ransom los originales quedan cifrados (.locked).
+  restic -r /srv/respaldo/erp restore latest --target /srv/restaurado
+  ct-rto      ← detiene el cronómetro, compara hash por hash y emite el certificado
+  Si prefieres restaurar en el sitio original: --target /  (sobrescribe)
+P
+ ;;
+ b1) cat <<'P'
+PISTA B1 — Copia inmutable con rest-server en modo append-only
+  rest-server --path /srv/inmutable --append-only --no-auth --listen 127.0.0.1:8080 \
+     > /var/log/rest-server.log 2>&1 &
+  restic -r rest:http://127.0.0.1:8080/erp init
+  restic -r rest:http://127.0.0.1:8080/erp backup /srv/condortech/erp
+  # Ahora juega al atacante: intenta borrar el snapshot (toma el ID de 'snapshots')
+  restic -r rest:http://127.0.0.1:8080/erp snapshots
+  restic -r rest:http://127.0.0.1:8080/erp forget <ID_DEL_SNAPSHOT>
+  # Debe FALLAR con "403 Forbidden" (si lo ves repetirse, corta con Ctrl+C). Luego: ct-check b1
+P
+ ;;
+ *) echo "Uso: ct-pista <a1|a2|b1>";;
+esac

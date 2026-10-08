@@ -1,0 +1,5 @@
+#!/bin/bash
+. /usr/local/bin/ct-comun
+echo "Banderas conseguidas en esta sesión (envíalas en el CTFd, categoría «Clase 12»):"
+[ -s $CT/banderas ] && awk '{printf "  %-12s %s  (%s)\n", $1" "$2, $3, $4}' $CT/banderas || echo "  (ninguna todavía)"
+[ -f /root/certificado-restauracion.txt ] && echo && echo "Certificado de restauración: /root/certificado-restauracion.txt"

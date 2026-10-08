@@ -1,0 +1,38 @@
+#!/bin/bash
+# Detiene el cronómetro, verifica la restauración archivo por archivo y emite el certificado.
+. /usr/local/bin/ct-comun
+[ -f $CT/rto_inicio ] || { no "El cronómetro no está en marcha: primero ct-ransom"; exit 1; }
+CAND="/srv/restaurado/srv/condortech/erp /srv/restaurado/erp /srv/restaurado $E"
+info "Busco la carpeta restaurada:"
+DIR=""
+for d in $CAND; do echo -e "${D}   \$ test -f $d/config/erp.conf${Z}"; [ -f "$d/config/erp.conf" ] && DIR=$d && break; done
+[ -n "$DIR" ] || { no "No encuentro los archivos restaurados. ¿Hiciste restic restore? Pista: ct-pista a2"; exit 1; }
+info "Comparo cada archivo restaurado contra el manifiesto original (sha256 tomado antes del ataque):"
+echo -e "${D}   \$ cd $DIR && sha256sum -c $CT/manifiesto.original${Z}"
+( cd "$DIR" && sha256sum -c $CT/manifiesto.original 2>&1 | sed 's/^/      /' )
+FALLOS=$( cd "$DIR" && sha256sum --quiet -c $CT/manifiesto.original 2>&1 | grep -c -E 'FAILED|No such' )
+TOTAL=$(wc -l < $CT/manifiesto.original)
+echo -e "${D}   \$ RTO=\$(date +%s) - \$(cat $CT/rto_inicio)${Z}"
+FIN=$(date +%s); INI=$(cat $CT/rto_inicio); RTO=$((FIN-INI))
+printf -v RTOF '%02d:%02d:%02d' $((RTO/3600)) $((RTO%3600/60)) $((RTO%60))
+if [ "$FALLOS" -eq 0 ]; then
+  echo $FIN > $CT/rto_fin
+  ok "Restauración verificada: $TOTAL/$TOTAL archivos con hash idéntico al original (desde $DIR)"
+  ok "RTO medido: $RTOF (desde el cifrado hasta la verificación)"
+  H=$(cd "$DIR" && sha256sum config/erp.conf | cut -c1-16)
+  echo -e "${D}   \$ cat > /root/certificado-restauracion.txt${Z}"
+  cat > /root/certificado-restauracion.txt <<C
+CERTIFICADO DE PRUEBA DE RESTAURACIÓN — Cóndor Tech S.A.S.
+Fecha (UTC): $(date -u +%FT%TZ)
+Repositorio: $REPO_A (restic, cifrado AES-256, llave en $LLAVE)
+Archivos verificados: $TOTAL/$TOTAL (sha256 idéntico al manifiesto original)
+RTO medido: $RTOF
+Huella erp.conf: $H
+Bandera: ${CT_RESCATE:+$F_AR}${CT_RESCATE:-$F_A2}
+→ Lleva este certificado y tu llave a la simulación de la Clase 13.
+C
+  ok "Certificado guardado en /root/certificado-restauracion.txt (cópialo a tu Runbook)"
+  bandera "A Completo" "$F_A2"
+else
+  no "$FALLOS de $TOTAL archivos NO coinciden con el original. El cronómetro sigue corriendo ($RTOF). Revisa la restauración."
+fi

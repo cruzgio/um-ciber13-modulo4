@@ -1,0 +1,20 @@
+#!/bin/bash
+# ct-retomar <bandera> — reconstruye el estado del Bloque A para arrancar el Bloque B sin repetir pasos.
+. /usr/local/bin/ct-comun
+esperar_listo
+case "$1" in
+ "$F_A1"|"$F_A2"|"$F_AR") ;;
+ *) no "Bandera no válida. Uso: ct-retomar <bandera A Mínimo, A Completo o A Rescate>"; exit 1;;
+esac
+info "Bandera aceptada. Reconstruyendo el estado del Bloque A:"
+if [ ! -f $E/config/erp.conf ]; then
+  if run "restic -r $REPO_A snapshots >/dev/null 2>&1"; then
+    run "rm -rf $E"; run "restic -r $REPO_A restore latest --target / >/dev/null" && ok "Datos del ERP restaurados desde $REPO_A"
+  fi
+fi
+[ -f $E/config/erp.conf ] || { no "No hay datos ni respaldo utilizable; ejecuta ct-rescate A"; exit 1; }
+run "find $E -name '*.locked' -delete"; run "rm -f $E/NOTA_DE_RESCATE.txt"
+if ! restic -r $REPO_A snapshots >/dev/null 2>&1; then
+  run "restic -r $REPO_A init >/dev/null" && run "restic -r $REPO_A backup $E >/dev/null" && ok "Repositorio A inicializado y respaldado"
+fi
+ok "Estado listo. Sigue con el Bloque B: ct-pista b1"

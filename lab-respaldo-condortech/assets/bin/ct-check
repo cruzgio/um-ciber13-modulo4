@@ -1,0 +1,29 @@
+#!/bin/bash
+. /usr/local/bin/ct-comun
+case "$1" in
+ a1)
+  info "Auditoría del Bloque A:"
+  run "test -f $REPO_A/config" || { no "No existe un repositorio restic en $REPO_A. Pista: ct-pista a1"; exit 1; }
+  run "restic -r $REPO_A cat config >/dev/null" && ok "Repositorio cifrado abre con la llave de Cóndor Tech" || { no "El repositorio no abre con $LLAVE"; exit 1; }
+  echo -e "${D}   \$ restic -r $REPO_A snapshots --json | jq '[.[] | select(.paths[]==\"$E\")] | length'${Z}"
+  N=$(nsnap $REPO_A $E)
+  [ "${N:-0}" -ge 1 ] && ok "Snapshots de $E: $N" || { no "No hay snapshot de $E. Pista: ct-pista a1"; exit 1; }
+  bandera "A Mínimo" "$F_A1" ;;
+ b1)
+  info "Auditoría del Bloque B:"
+  run "pgrep -af rest-server | grep -q -- --append-only" && ok "rest-server corriendo en modo append-only" || { no "No hay rest-server con --append-only. Pista: ct-pista b1"; exit 1; }
+  run "curl -fs http://127.0.0.1:8080/erp/config -o /dev/null" && ok "Repositorio remoto responde en :8080" || { no "El repositorio rest:http://127.0.0.1:8080/erp no existe o el puerto no responde"; exit 1; }
+  info "Limpio el candado (lock) que pudo dejar el atacante al cortar su comando:"
+  run "restic -r $REPO_B unlock >/dev/null 2>&1" || true
+  echo -e "${D}   \$ restic -r $REPO_B snapshots --json | jq length${Z}"
+  N=$(nsnap $REPO_B)
+  [ "${N:-0}" -ge 1 ] && ok "Snapshots en la copia inmutable: $N" || { no "La copia inmutable no tiene snapshots todavía"; exit 1; }
+  ID=$(primer_snap $REPO_B)
+  info "Ahora el auditor juega al atacante: borra el snapshot directamente por HTTP"
+  echo -e "${D}   \$ curl -X DELETE http://127.0.0.1:8080/erp/snapshots/$ID${Z}"
+  CODE=$(curl -s -o /dev/null -w '%{http_code}' -X DELETE http://127.0.0.1:8080/erp/snapshots/$ID)
+  if [ "$CODE" = "403" ]; then ok "Intento de borrado rechazado por el servidor (HTTP $CODE)"; else no "El servidor permitió borrar (HTTP $CODE): la copia NO es inmutable"; exit 1; fi
+  run "restic -r $REPO_B snapshots" >/dev/null; [ "$(nsnap $REPO_B)" -ge 1 ] && ok "El snapshot sigue ahí después del ataque"
+  bandera "B Inmutable" "$F_B1" ;;
+ *) echo "Uso: ct-check <a1|b1>   (la bandera A Completo la emite ct-rto)";;
+esac

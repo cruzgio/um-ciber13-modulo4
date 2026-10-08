@@ -1,0 +1,28 @@
+#!/bin/bash
+. /usr/local/bin/ct-comun
+cat <<'M'
+══════════════════════════════════════════════════════════════
+  MISIÓN DE RESPALDO — Cóndor Tech S.A.S. (Clase 12)
+══════════════════════════════════════════════════════════════
+  Datos críticos .......... /srv/condortech/erp      (el ERP)
+  Llave de cifrado ........ /root/llave-condortech.txt (FUERA del repo)
+  Repositorio Bloque A .... /srv/respaldo/erp         (disco local)
+  Repositorio Bloque B .... rest:http://127.0.0.1:8080/erp (inmutable)
+  Zona de restauración .... /srv/restaurado
+
+  BLOQUE A — Respaldar, perder, restaurar (RTO medido)
+    1. restic init  +  restic backup      → ct-check a1   (A Mínimo, 2 pts)
+    2. ct-ransom  (simula el ataque)      → cronómetro arranca
+    3. restic restore  +  ct-rto          → A Completo (2 pts) + certificado
+
+  BLOQUE B — La copia que el atacante no puede borrar
+    4. ct-retomar <bandera A>            (si no terminaste A)
+    5. rest-server --append-only  +  backup  +  intento de borrado
+       → ct-check b1                      (B Inmutable, 2 pts)
+
+  Atajos:  ct-pista <a1|a2|b1>   ct-rescate <A|B>   ct-banderas
+  Las variables RESTIC_REPOSITORY y RESTIC_PASSWORD_FILE ya están
+  definidas en tu shell para el Bloque A (abre una terminal nueva o
+  ejecuta: source ~/.bashrc).
+══════════════════════════════════════════════════════════════
+M

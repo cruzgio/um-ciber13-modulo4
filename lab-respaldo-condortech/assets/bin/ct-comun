@@ -1,0 +1,35 @@
+# ct-comun — funciones compartidas (se incluye con: . /usr/local/bin/ct-comun)
+CT=/var/lib/ct
+E=/srv/condortech/erp
+REPO_A=/srv/respaldo/erp
+REPO_B=rest:http://127.0.0.1:8080/erp
+LLAVE=/root/llave-condortech.txt
+export RESTIC_PASSWORD_FILE=$LLAVE
+F_A1='CT{c12-a-min-ffe699}'
+F_A2='CT{c12-a-com-db1eca}'
+F_AR='CT{c12-a-res-ca1de4}'
+F_B1='CT{c12-b-inm-0ce0ab}'
+F_BR='CT{c12-b-res-403656}'
+V='\033[1;32m'; R='\033[1;31m'; A='\033[1;33m'; Z='\033[0m'; C='\033[1;36m'
+ok(){ echo -e "${V}✔${Z} $*"; }
+no(){ echo -e "${R}✘${Z} $*"; }
+info(){ echo -e "${C}▶${Z} $*"; }
+bandera(){ # bandera <nombre> <valor>
+  [ -n "$CT_RESCATE" ] && return 0   # en modo rescate solo se emite la bandera de Rescate
+  grep -q "^$1 " $CT/banderas 2>/dev/null || echo "$1 $2 $(date -u +%FT%TZ)" >> $CT/banderas
+  echo; echo -e "${A}🏁 BANDERA $1 → $2${Z}"; echo "   Envíala en el CTFd, categoría «Clase 12», reto «$1»."; echo
+}
+esperar_listo(){
+  if [ "$(cat $CT/estado 2>/dev/null)" != "listo" ]; then
+    no "El escenario todavía se está preparando. Ejecuta: ct-listo"; exit 1; fi
+}
+nsnap(){ # nsnap <repo> [ruta] — cuenta snapshots (con jq si existe, si no con grep)
+  local J; J=$(restic -r "$1" snapshots --json 2>/dev/null) || { echo 0; return; }
+  if command -v jq >/dev/null; then
+    if [ -n "$2" ]; then echo "$J" | jq -r --arg p "$2" '[.[] | select(.paths[]? == $p)] | length'; else echo "$J" | jq -r 'length'; fi
+  else echo "$J" | grep -o '"id":"' | wc -l; fi
+}
+primer_snap(){ restic -r "$1" snapshots --json 2>/dev/null | grep -o '"id":"[0-9a-f]*"' | head -1 | cut -d'"' -f4; }
+D='\033[2m'
+# run — muestra el comando real que se ejecuta por debajo (en gris) y luego lo corre
+run(){ echo -e "${D}   \$ $*${Z}"; eval "$@"; }

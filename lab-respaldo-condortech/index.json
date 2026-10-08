@@ -1,0 +1,84 @@
+{
+  "title": "Misión de respaldo — Cóndor Tech (Clase 12)",
+  "description": "Respaldo cifrado con restic, simulación de ransomware, restauración con RTO medido y una copia que el atacante no puede borrar.",
+  "details": {
+    "intro": {
+      "text": "intro.md",
+      "background": "setup.sh"
+    },
+    "steps": [
+      {
+        "title": "Bloque A · Paso 1 — Repositorio cifrado y primer respaldo",
+        "text": "step1.md"
+      },
+      {
+        "title": "Bloque A · Paso 2 — El peor día: restaurar y medir el RTO",
+        "text": "step2.md"
+      },
+      {
+        "title": "Bloque B — La copia que el atacante no puede borrar",
+        "text": "step3.md"
+      }
+    ],
+    "finish": {
+      "text": "finish.md"
+    },
+    "assets": {
+      "host01": [
+        {
+          "file": "bin/ct-comun",
+          "target": "/usr/local/bin/",
+          "chmod": "+x"
+        },
+        {
+          "file": "bin/ct-listo",
+          "target": "/usr/local/bin/",
+          "chmod": "+x"
+        },
+        {
+          "file": "bin/ct-mapa",
+          "target": "/usr/local/bin/",
+          "chmod": "+x"
+        },
+        {
+          "file": "bin/ct-pista",
+          "target": "/usr/local/bin/",
+          "chmod": "+x"
+        },
+        {
+          "file": "bin/ct-ransom",
+          "target": "/usr/local/bin/",
+          "chmod": "+x"
+        },
+        {
+          "file": "bin/ct-rto",
+          "target": "/usr/local/bin/",
+          "chmod": "+x"
+        },
+        {
+          "file": "bin/ct-check",
+          "target": "/usr/local/bin/",
+          "chmod": "+x"
+        },
+        {
+          "file": "bin/ct-retomar",
+          "target": "/usr/local/bin/",
+          "chmod": "+x"
+        },
+        {
+          "file": "bin/ct-rescate",
+          "target": "/usr/local/bin/",
+          "chmod": "+x"
+        },
+        {
+          "file": "bin/ct-banderas",
+          "target": "/usr/local/bin/",
+          "chmod": "+x"
+        }
+      ]
+    }
+  },
+  "backend": {
+    "imageid": "ubuntu"
+  }
+}

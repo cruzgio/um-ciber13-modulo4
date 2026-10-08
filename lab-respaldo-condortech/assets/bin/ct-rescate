@@ -1,0 +1,34 @@
+#!/bin/bash
+# ct-rescate <A|B> — ejecuta el bloque completo por ti mostrando cada comando; entrega la bandera de Rescate (1 pt).
+. /usr/local/bin/ct-comun
+esperar_listo
+export CT_RESCATE=1
+case "$1" in
+ A)
+  info "RESCATE A — ejecuto el Bloque A por ti. Mira cada comando: es lo que harías a mano."
+  restic -r $REPO_A snapshots >/dev/null 2>&1 || run "restic -r $REPO_A init"
+  run "find $E -name '*.locked' -delete"; run "rm -f $E/NOTA_DE_RESCATE.txt"
+  [ -f $E/config/erp.conf ] || run "restic -r $REPO_A restore latest --target / >/dev/null"
+  run "restic -r $REPO_A backup $E"
+  echo; info "ct-ransom (el ataque):"; ct-ransom
+  echo; run "restic -r $REPO_A restore latest --target /srv/restaurado"
+  echo; info "ct-rto (verificación y RTO):"; ct-rto
+  unset CT_RESCATE; bandera "A Rescate" "$F_AR" ;;
+ B)
+  info "RESCATE B — ejecuto el Bloque B por ti. Mira cada comando."
+  ct-retomar "$F_AR" >/dev/null 2>&1 || ct-rescate A >/dev/null 2>&1
+  if ! pgrep -af rest-server | grep -q -- '--append-only'; then
+    echo -e "${D}   \$ rest-server --path /srv/inmutable --append-only --no-auth --listen 127.0.0.1:8080 > /var/log/rest-server.log 2>&1 &${Z}"
+    nohup rest-server --path /srv/inmutable --append-only --no-auth --listen 127.0.0.1:8080 >/var/log/rest-server.log 2>&1 &
+    sleep 2
+  fi
+  restic -r $REPO_B snapshots >/dev/null 2>&1 || run "restic -r $REPO_B init"
+  run "restic -r $REPO_B backup $E"
+  ID=$(primer_snap $REPO_B)
+  echo; info "Ahora el atacante intenta borrar el snapshot (debe fallar):"
+  run "timeout 20 restic -r $REPO_B forget $ID 2>&1 | grep -m3 403" || true
+  run "restic -r $REPO_B unlock >/dev/null 2>&1" || true
+  echo; info "ct-check b1 (auditoría):"; ct-check b1
+  unset CT_RESCATE; bandera "B Rescate" "$F_BR" ;;
+ *) echo "Uso: ct-rescate <A|B>";;
+esac

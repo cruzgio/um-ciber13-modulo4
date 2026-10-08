@@ -1,0 +1,11 @@
+#!/bin/bash
+. /usr/local/bin/ct-comun
+info "Comprobando que el escenario esté listo..."
+run "cat $CT/estado"
+for i in $(seq 1 90); do [ "$(cat $CT/estado 2>/dev/null)" = "listo" ] && break; sleep 2; done
+[ "$(cat $CT/estado 2>/dev/null)" = "listo" ] || { no "Aún preparando (puede tardar 2–3 min). Vuelve a ejecutar ct-listo."; exit 1; }
+run "restic version" && ok "restic instalado" || no "restic NO instalado"
+run "command -v rest-server" >/dev/null && ok "rest-server instalado (para el Bloque B)" || no "rest-server NO instalado: el Bloque B necesita ct-rescate B o reiniciar el escenario"
+run "ls -l $LLAVE" && ok "Llave de Cóndor Tech (vive fuera del repositorio)" || no "Falta la llave"
+run "find $E -type f | wc -l"; ok "Datos críticos del ERP en $E"
+echo; info "Todo listo. Sigue con: ct-mapa"
