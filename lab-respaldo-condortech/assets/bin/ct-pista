@@ -21,20 +21,33 @@ P
 PISTA B1 — Prepara la copia inmutable (rest-server en modo append-only)
   rest-server --path /srv/inmutable --append-only --no-auth --listen 127.0.0.1:8080 \
      > /var/log/rest-server.log 2>&1 &
+  sleep 1
   restic -r rest:http://127.0.0.1:8080/erp -p /root/llave-condortech.txt init
   restic -r rest:http://127.0.0.1:8080/erp -p /root/llave-condortech.txt backup /srv/condortech/erp
   ct-check b1      ← comprueba que la copia existe y que rechaza el borrado
   Luego: ct-ransom (segunda ola) y ct-pista b2
 P
  ;;
- b2) cat <<'P'
-PISTA B2 — Sobrevivir a la segunda ola
-  1) Intenta con el respaldo local (va a fallar: el atacante lo cifró):
-     restic -r /srv/respaldo/erp -p /root/llave-condortech.txt restore latest --target /srv/restaurado
-  2) Restaura desde la copia inmutable:
-     restic -r rest:http://127.0.0.1:8080/erp -p /root/llave-condortech.txt restore latest --target /srv/restaurado
-  3) ct-rto   ← verifica, mide el RTO de la segunda ola y entrega B Inmutable
+ b2)
+  if [ "$2" = "comando" ]; then cat <<'P'
+PISTA B2 (comando completo)
+  restic -r rest:http://127.0.0.1:8080/erp -p /root/llave-condortech.txt restore latest --target /srv/restaurado
+  ct-rto
 P
+  else cat <<'P'
+PISTA B2 — Sobrevivir a la segunda ola (razonamiento)
+  1) El comando de restauración tiene tres partes:
+       -r <REPOSITORIO>   de dónde restauras
+       -p <LLAVE>         con qué lo abres (la de Cóndor Tech, la misma de siempre)
+       restore latest --target <DESTINO>   qué restauras y adónde
+  2) El restore contra /srv/respaldo/erp falló porque el atacante cifró ESE repositorio.
+  3) ¿Qué otro repositorio tienes? Mira el comando con el que hiciste el backup
+     de la copia inmutable: ahí está la dirección.
+     (puedes buscarlo con:  history | grep backup)
+  4) Cambia solo el -r. Lo demás queda igual.
+  ¿Sigues atascado?  ct-pista b2 comando
+P
+  fi
  ;;
  *) echo "Uso: ct-pista <a1|a2|b1|b2>";;
 esac

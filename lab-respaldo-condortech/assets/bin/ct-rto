@@ -2,11 +2,19 @@
 # Detiene el cronómetro, verifica la restauración archivo por archivo y emite el certificado.
 . /usr/local/bin/ct-comun
 [ -f $CT/rto_inicio ] || { no "El cronómetro no está en marcha: primero ct-ransom"; exit 1; }
+[ -f $CT/rto_fin ] && { no "Este ataque ya está recuperado y medido. Para un ataque nuevo: ct-ransom"; exit 1; }
 CAND="/srv/restaurado/srv/condortech/erp /srv/restaurado/erp /srv/restaurado $E"
 info "Busco la carpeta restaurada:"
 DIR=""
 for d in $CAND; do echo -e "${D}   \$ test -f $d/config/erp.conf${Z}"; [ -f "$d/config/erp.conf" ] && DIR=$d && break; done
-[ -n "$DIR" ] || { no "No encuentro los archivos restaurados. ¿Hiciste restic restore? Pista: ct-pista a2"; exit 1; }
+if [ -z "$DIR" ]; then
+  if [ "$(cat $CT/ola 2>/dev/null)" = "2" ]; then
+    no "No encuentro los archivos restaurados. ¿Ya restauraste desde la copia inmutable? Revisa el -r y el --target. Pista: ct-pista b2"
+  else
+    no "No encuentro los archivos restaurados. ¿Hiciste restic restore? Pista: ct-pista a2"
+  fi
+  exit 1
+fi
 info "Comparo cada archivo restaurado contra el manifiesto original (sha256 tomado antes del ataque):"
 echo -e "${D}   \$ cd $DIR && sha256sum -c $CT/manifiesto.original${Z}"
 ( cd "$DIR" && sha256sum -c $CT/manifiesto.original 2>&1 | sed 's/^/      /' )

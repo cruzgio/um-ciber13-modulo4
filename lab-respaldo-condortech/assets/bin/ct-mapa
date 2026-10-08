@@ -19,7 +19,8 @@ cat <<'M'
     4. ct-retomar <bandera A>            (si no terminaste A)
     5. rest-server --append-only + init + backup → ct-check b1 (copia lista)
     6. ct-ransom: el atacante vuelve y cifra TAMBIÉN el respaldo local
-    7. restaurar desde la copia inmutable + ct-rto → B Inmutable (2 pts)
+    7. restaurar desde la copia inmutable (el comando lo piensas tú)
+       + ct-rto → B Inmutable (2 pts)
 
   Atajos:  ct-pista <a1|a2|b1|b2>   ct-rescate <A|B>   ct-banderas
   Contraseña de los repositorios: SIEMPRE la llave de Cóndor Tech.

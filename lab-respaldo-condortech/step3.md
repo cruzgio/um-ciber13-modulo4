@@ -16,6 +16,7 @@ ct-retomar CT{...tu-bandera...}
 
 ```
 rest-server --path /srv/inmutable --append-only --no-auth --listen 127.0.0.1:8080 > /var/log/rest-server.log 2>&1 &
+sleep 1; curl -s -o /dev/null http://127.0.0.1:8080/ && echo "✔ rest-server escuchando en :8080" || echo "✘ rest-server no responde: revisa /var/log/rest-server.log"
 ```{{exec}}
 
 (`--no-auth` es solo para el laboratorio; en producción va con usuario y contraseña o detrás de TLS).
@@ -54,11 +55,18 @@ restic -r /srv/respaldo/erp -p /root/llave-condortech.txt restore latest --targe
 
 No funciona. El respaldo que vive en el mismo servidor cayó con el servidor.
 
-## 5. Recupera desde la copia inmutable
+## 5. Recupera desde la copia inmutable — este comando lo escribes tú
 
-```
-restic -r rest:http://127.0.0.1:8080/erp -p /root/llave-condortech.txt restore latest --target /srv/restaurado
-```{{exec}}
+Mira el comando del paso 4: hizo exactamente lo que había que hacer, pero **contra el repositorio equivocado**. Hazte una sola pregunta:
+
+> **¿Qué parte del comando dice *de dónde* se restaura, y qué tendría que decir ahora?**
+
+Escribe tu comando y ejecútalo. Si falla, lee el error: casi siempre dice qué falta.
+
+- ¿Atascado? `ct-pista b2` te da el razonamiento.
+- ¿Sigues atascado? `ct-pista b2 comando` te da el comando completo.
+
+Cuando la restauración termine:
 
 ```
 ct-rto
