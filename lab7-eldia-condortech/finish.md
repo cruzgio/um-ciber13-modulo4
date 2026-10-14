@@ -1,12 +1,10 @@
-# Listo
+# Fin del componente técnico
 
-Comprueba qué conseguiste:
-
-```bash
+```
 ct-banderas
 ```{{exec}}
 
-- Bloque A → banderas 13.1–13.4 (cada integrante desde su cuenta del CTFd).
-- Bloque B → certificado en la Bitácora + bandera 13.5.
+- Bloque A → 13.1 a 13.4 (cada integrante, desde su cuenta del CTFd).
+- Bloque B → 13.5 y el certificado pegado en la Bitácora.
 
-Lo que falte se recupera en el hotwash: el formato tabletop no atasca. Vuelve al chat del equipo: la junta espera el informe.
+Lo que falte se recupera en el hotwash. Vuelve con tu equipo: la junta espera el informe.

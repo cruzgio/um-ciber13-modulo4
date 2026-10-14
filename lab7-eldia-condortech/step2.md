@@ -1,22 +1,23 @@
-## Paso 2 — Paciente cero y cuenta comprometida (13.1 y 13.2)
+# Paso 2 — Paciente cero (13.1) y cuenta comprometida (13.2)
 
-Pregunta guía: **¿desde qué equipo y con qué cuenta entró el atacante por primera vez?**
+**Pregunta guía:** ¿por qué equipo entró el atacante y con qué cuenta llegó a `erp-prod`?
 
-Pistas de método (no de respuesta):
+Herramientas (te muestran el `grep`/`jq` que corren por debajo):
 
-```bash
-ct-buscar "phish"
-ct-buscar "203.0.113"
-ct-eventos 4624 | head -40
-```{{exec}}
+- `ct-buscar <texto>` busca en todo el pack.
+- `ct-eventos` resume el registro de seguridad de `erp-prod`; `ct-eventos <ID>` muestra el detalle de un evento.
 
-Cruza tres fuentes: el correo (quién hizo clic), el proxy (qué equipo habló primero con el exterior raro) y las autenticaciones (qué cuenta entró desde ese equipo). Si las tres apuntan al mismo lugar, tienes al paciente cero.
+Método, no respuesta: **cruza fuentes**. Una sola fuente es un indicio; tres que coinciden son una conclusión.
 
-Responde (el nombre de equipo tal como aparece en los logs; la cuenta sin dominio):
+- Contabilidad recibe facturas de proveedores que nadie reconoce. ¿Alguna llegó estos días?
+- Un equipo infectado suele llamar a su servidor **a intervalos fijos**.
+- La VPN no tiene segundo factor. ¿Alguien entró desde un lugar que no es el de siempre?
 
-```bash
-ct-responder a1 <hostname-paciente-cero>
-ct-responder a2 <cuenta-comprometida>
+Cuando lo tengas (nombre del equipo sin dominio; cuenta sin dominio):
+
+```
+ct-responder a1 <nombre-del-equipo>
+ct-responder a2 <cuenta>
 ```
 
-Si necesitas ayuda: `ct-pista a1` / `ct-pista a2`.
+¿Trabado? `ct-pista a1` · `ct-pista a2`

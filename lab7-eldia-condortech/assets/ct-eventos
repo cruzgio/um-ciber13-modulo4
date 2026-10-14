@@ -1,5 +1,0 @@
-#!/bin/bash
-source /opt/ct/ct-lib.sh; ct_espera
-F=/srv/evidencias/SRV-ARCHIVOS-Security.evtx.json
-if [ -n "$1" ]; then jq -c --argjson id "$1" 'select(.Event.System.EventID==$id) | {hora:.Event.System.TimeCreated."#attributes".SystemTime, id:.Event.System.EventID, datos:.Event.EventData}' $F
-else jq -r '[.Event.System.TimeCreated."#attributes".SystemTime, .Event.System.EventID, (.Event.EventData.TargetUserName // .Event.EventData.SubjectUserName // "-")] | @tsv' $F | sort; echo -e "${C}ct-eventos <EventID> para el detalle (4624 inicio de sesión · 4688 proceso · 5156 conexión · 4663 acceso a archivo · 1102 log borrado)${N}"; fi

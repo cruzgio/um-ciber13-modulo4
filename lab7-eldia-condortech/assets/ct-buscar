@@ -1,5 +1,0 @@
-#!/bin/bash
-source /opt/ct/ct-lib.sh; ct_espera
-[ -z "$1" ] && { echo "Uso: ct-buscar <texto>   (busca en todo el pack, sin distinguir mayúsculas)"; exit 1; }
-grep -i -n --color=always -- "$1" /srv/evidencias/* | sed 's#/srv/evidencias/##' | head -${2:-60}
-echo -e "${C}(se muestran hasta ${2:-60} líneas; ct-buscar <texto> <n> para más)${N}"

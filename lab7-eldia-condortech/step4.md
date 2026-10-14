@@ -1,33 +1,50 @@
-## Paso 4 — Bloque B · Restaurar con tu llave y validar
+# Paso 4 — Bloque B: recuperar el ERP
 
-El inyecto 6 dice: *el repositorio inmutable de Cóndor Tech está disponible*. Está en `/srv/respaldo/erp` y lo hizo tu equipo el jueves 8. **El escenario no tiene la llave**: es la de `/root/llave-condortech.txt` de la Clase 12.
+Inyecto 6: el atacante está contenido. Hay que volver a tener el ERP. Tienes dos copias posibles:
 
-Si acabas de relanzar el escenario, primero:
+- `/srv/respaldo/erp`: la copia nocturna del **nas-backup**, en la misma sala.
+- La **copia inmutable** que dejaste en la Clase 12, publicada otra vez donde la dejaste.
 
-```bash
+Si acabas de abrir una sesión nueva, primero:
+
+```
 ct-listo
 ```{{exec}}
 
-Mira el estado: originales cifrados, repositorio presente:
+## 1. Prueba la copia del nas-backup
 
-```bash
-ls /srv/erp
+```
 restic -r /srv/respaldo/erp snapshots
 ```{{exec}}
 
-Arranca el cronómetro y restaura (restic te pide la llave):
+¿Qué pasó? Míralo también en las evidencias (`ct-buscar nas-backup`).
 
-```bash
+## 2. Predice antes de actuar
+
+¿Desde qué copia vas a poder restaurar, y por qué esa sí y la otra no? Escríbelo con tus palabras:
+
+```
+ct-predigo b "<tu respuesta>"
+```
+
+## 3. Arranca el reloj y restaura
+
+```
 ct-cronometro
-restic -r /srv/respaldo/erp restore latest --target /srv/restaurado
 ```{{exec}}
 
-Valida integridad, mide el RTO y obtén el certificado:
+El comando de restauración **lo armas tú**: es el mismo que usaste el jueves 8 en la segunda ola, con destino `/srv/restaurado`. restic te va a pedir la llave: es **la tuya de la Clase 12**. Este escenario no la tiene.
 
-```bash
+¿Trabado? `ct-pista b` (razonamiento) · `ct-pista b comando` (el comando completo)
+
+## 4. Valida, mide y certifica
+
+```
 ct-rto
 ```{{exec}}
 
-`ct-rto` compara archivo por archivo contra los hashes conocidos, calcula tu RTO y escribe `/root/certificado-restauracion-eldia.txt`. El **Líder pega el certificado en la Bitácora** (vale los 2 puntos de restauración validada) y el Técnico envía la bandera 13.5 desde el CTFd.
+`ct-rto` compara archivo por archivo contra el ERP original, te muestra tu predicción junto a lo que pasó, calcula tu RTO y escribe `/root/certificado-restauracion-eldia.txt`. El **Líder pega el certificado en la Bitácora**.
+
+> Restaurar en limpio: en la vida real, esto se hace sobre un servidor reconstruido, nunca sobre el comprometido. «Aquí no criamos mascotas».
 
 Sin llave: `ct-rescate B` muestra la secuencia completa y entrega solo la bandera de rescate. Sin llave no hay restauración: eso también se registra.

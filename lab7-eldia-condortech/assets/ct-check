@@ -1,7 +1,0 @@
-#!/bin/bash
-source /opt/ct/ct-lib.sh
-case "$1" in
- a|A) for i in a1 a2 a3 a4; do if [ -f $CT_STATE/$i ]; then echo -e "${G}✔${N} ${CT_NOMBRE[$i]}"; else echo -e "${R}✘${N} ${CT_NOMBRE[$i]} — pendiente (ct-responder $i ...)"; fi; done;;
- b|B) [ -f $CT_STATE/b1 ] && echo -e "${G}✔${N} ${CT_NOMBRE[b1]} — certificado en /root/certificado-restauracion-eldia.txt" || echo -e "${R}✘${N} ${CT_NOMBRE[b1]} — pendiente (ct-rto tras restaurar)";;
- *) $0 a; $0 b;;
-esac

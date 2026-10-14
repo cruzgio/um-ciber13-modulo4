@@ -1,16 +1,15 @@
 {
   "title": "Lab 7 — EL DÍA: ransomware en Cóndor Tech (Módulo 4 · Clase 13)",
-  "description": "Bloque A: pack de evidencias (paciente cero, cuenta, C2, nota). Bloque B: restauración validada desde el repositorio de Cóndor Tech con tu llave de la Clase 12.",
+  "description": "Bloque A: pack de evidencias (paciente cero, cuenta, C2, nota). Bloque B: recuperar el ERP desde la copia que sobrevivió, con tu llave de la Clase 12.",
   "details": {
-    "intro": { "text": "intro.md", "background": "background.sh" },
+    "intro": { "text": "intro.md", "background": "setup.sh" },
     "steps": [
       { "title": "Bloque A · Paso 1 — El pack de evidencias", "text": "step1.md" },
       { "title": "Bloque A · Paso 2 — Paciente cero y cuenta comprometida", "text": "step2.md" },
-      { "title": "Bloque A · Paso 3 — IP de C2 y nota de rescate", "text": "step3.md" },
-      { "title": "Bloque B · Paso 4 — Restaurar con tu llave y validar (ct-rto)", "text": "step4.md" }
+      { "title": "Bloque A · Paso 3 — C2 y nota de rescate", "text": "step3.md" },
+      { "title": "Bloque B · Paso 4 — Recuperar el ERP con tu llave", "text": "step4.md" }
     ],
-    "finish": { "text": "finish.md" },
-    "assets": { "host01": [ { "file": "*", "target": "/opt/ct/", "chmod": "+x" } ] }
+    "finish": { "text": "finish.md" }
   },
   "backend": { "imageid": "ubuntu" }
 }

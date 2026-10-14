@@ -1,9 +1,0 @@
-#!/bin/bash
-case "$1" in
- a1) echo "Pista 13.1: en mail.log cuatro personas recibieron el correo; en proxy-access.log solo UNA IP de estación descargó algo del dominio falso. Traduce esa IP a nombre de equipo con el campo WorkstationName de los eventos 4624 (ct-eventos 4624).";;
- a2) echo "Pista 13.2: la cuenta que entró por SSH al SRV-ERP desde esa misma IP (srv-erp-auth.log) y que aparece como auid en srv-erp-audit.log. Sin dominio, en minúsculas.";;
- a3) echo "Pista 13.3: un beacon es una conexión repetida a intervalos fijos. En el proxy, busca CONNECT y mira qué destino se repite cada 5 minutos toda la noche. Confírmalo en auditd (curl) y en el evento 5156.";;
- a4) echo "Pista 13.4: ls /srv/erp. El único archivo que NO termina en .condor. También aparece en auditd (type=PATH ... nametype=CREATE) y en un evento 4663.";;
- b|B) echo "Pista B: ct-cronometro → restic -r /srv/respaldo/erp restore latest --target /srv/restaurado (te pide la llave de la Clase 12) → ct-rto.";;
- *) echo "Uso: ct-pista a1|a2|a3|a4|b";;
-esac

@@ -1,12 +1,28 @@
 # EL DÍA — Lab 7 · Cóndor Tech S.A.S.
 
-05:47: los archivos del ERP amanecieron cifrados y hay una nota de rescate. Este escenario es el **componente técnico** de la simulación. Lo opera el rol **Técnico** de cada equipo; el resto del equipo trabaja la Bitácora en paralelo.
+> *05:47. El ERP (`erp-prod`) no responde. La exportación del ERP amaneció cifrada y hay una nota de rescate. «Si mañana amanecemos con el ERP cifrado, no hay un solo documento que diga qué hacer primero». Hoy sí lo hay: el de tu equipo.*
 
-**Dos bloques independientes** (no hace falta terminar A para hacer B):
+Este escenario es el **componente técnico** de la simulación. Lo opera el rol **Técnico**; el resto del equipo sigue decidiendo y registrando en la Bitácora.
 
-- **Bloque A — Evidencias (inyecto 3, ~18:45):** paciente cero, cuenta comprometida, IP de C2 y nombre de la nota → banderas 13.1–13.4 en el CTFd (categoría «Clase 13»).
-- **Bloque B — Restauración (inyecto 6, ~20:05):** el repositorio de Cóndor Tech ya está montado. Solo falta **tu llave de la Clase 12**. `ct-rto` valida la integridad y emite el certificado.
+| Bloque | Cuándo | Qué logras | Banderas |
+|---|---|---|---|
+| **A · Evidencias** | Inyecto 3 | Paciente cero, cuenta comprometida, IP de C2 y nombre de la nota | 13.1 (2) · 13.2 (2) · 13.3 (2) · 13.4 (1) · Rescate A (1) |
+| **B · Recuperación** | Inyecto 6 | Restaurar el ERP con **tu llave de la Clase 12** y validarlo | 13.5 (2) · Rescate B (1) |
 
-La sesión de Killercoda dura 60 min: si venció antes del inyecto 6, **vuelve a lanzar el escenario** y ve directo al Paso 4. No pierdes nada: las banderas de A ya están en el CTFd.
+Los bloques son **independientes**. La sesión dura **60 minutos**: si se te acaba antes del inyecto 6, abre una sesión nueva y ve directo al Paso 4. Las banderas que ya enviaste al CTFd no se pierden. `ct-tiempo` te dice cuánto te queda.
 
-Empieza con `ct-listo` y `ct-mapa`. Si te atascas: `ct-pista <id>` o `ct-rescate A|B`.
+**Regla de tiempo:** si te trabas, escribe `PAUSA` en el chat de Teams y usa `ct-pista`. Si llegó el inyecto siguiente, `ct-rescate` y sigues con tu equipo. Parar no cuesta nota.
+
+## Antes de empezar
+
+El escenario se prepara solo (1–2 min):
+
+```
+ct-listo
+```{{exec}}
+
+```
+ct-mapa
+```{{exec}}
+
+> Cada herramienta `ct-*` te muestra en gris los comandos reales que ejecuta. Léelos: son los que usarías en un incidente de verdad.
