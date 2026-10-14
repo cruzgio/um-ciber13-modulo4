@@ -21,11 +21,11 @@ restic -r /srv/respaldo/erp snapshots
 
 ## 2. Predice antes de actuar
 
-¿Desde qué copia vas a poder restaurar, y por qué esa sí y la otra no? Escríbelo con tus palabras:
+¿Desde qué copia vas a poder restaurar? Elige una de las tres opciones (escribes solo el número):
 
 ```
-ct-predigo b "<tu respuesta>"
-```
+ct-predigo b
+```{{exec}}
 
 ## 3. Arranca el reloj y restaura
 
