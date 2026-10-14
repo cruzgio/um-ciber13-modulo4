@@ -1,0 +1,2 @@
+#!/bin/bash
+date +%s > /root/.ct-t0; echo "⏱  Cronómetro del RTO iniciado: $(date '+%H:%M:%S'). Ahora restaura: restic -r /srv/respaldo/erp restore latest --target /srv/restaurado"

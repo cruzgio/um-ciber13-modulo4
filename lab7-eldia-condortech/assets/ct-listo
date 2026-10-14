@@ -1,0 +1,4 @@
+#!/bin/bash
+source /opt/ct/ct-lib.sh
+if ct_listo; then echo -e "${G}${B}LISTO${N} — evidencias en /srv/evidencias, ERP cifrado en /srv/erp, repositorio en /srv/respaldo/erp."; echo "Sigue con: ct-mapa"; else
+  echo -e "${Y}Todavía no. El escenario instala restic y arma las evidencias (1–2 min).${N}"; for i in $(seq 1 90); do ct_listo && { echo -e "${G}${B}LISTO${N}"; exit 0; }; sleep 2; printf '.'; done; echo; echo -e "${R}Sigue sin estar listo: revisa /var/log/ct-background.log${N}"; fi

@@ -1,0 +1,11 @@
+#!/bin/bash
+source /opt/ct/ct-lib.sh; ct_espera
+echo -e "${B}Pack de evidencias — /srv/evidencias${N}"
+printf '  %-36s %-8s %s\n' "archivo" "líneas" "qué es"
+printf '  %-36s %-8s %s\n' mail.log "$(wc -l < /srv/evidencias/mail.log)" "correo entrante/saliente (SRV-CORREO, postfix)"
+printf '  %-36s %-8s %s\n' proxy-access.log "$(wc -l < /srv/evidencias/proxy-access.log)" "proxy de salida (squid; epoch, IP origen, destino)"
+printf '  %-36s %-8s %s\n' srv-erp-auth.log "$(wc -l < /srv/evidencias/srv-erp-auth.log)" "sshd + sudo del servidor ERP (Linux)"
+printf '  %-36s %-8s %s\n' srv-erp-audit.log "$(wc -l < /srv/evidencias/srv-erp-audit.log)" "auditd del servidor ERP (auid no miente)"
+printf '  %-36s %-8s %s\n' erp-app.log "$(wc -l < /srv/evidencias/erp-app.log)" "aplicación ERP"
+printf '  %-36s %-8s %s\n' SRV-ARCHIVOS-Security.evtx.json "$(wc -l < /srv/evidencias/SRV-ARCHIVOS-Security.evtx.json)" "Security.evtx del servidor de archivos Windows (JSON de evtx_dump)"
+echo; echo "Fecha del proxy en humano: date -d @<epoch>   ·   Hora local Uruguay = UTC-3"

@@ -1,0 +1,5 @@
+#!/bin/bash
+source /opt/ct/ct-lib.sh
+echo -e "${B}Banderas conseguidas en esta sesión:${N}"; n=0
+for i in a1 a2 a3 a4 ares b1 bres; do [ -f $CT_STATE/$i ] && { echo "  ${CT_NOMBRE[$i]}: ${CT_FLAG[$i]}"; n=$((n+1)); }; done
+[ $n -eq 0 ] && echo "  (ninguna todavía)"; echo "Categoría «Clase 13» en el CTFd. Lo que falte se recupera en el hotwash."

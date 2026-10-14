@@ -1,0 +1,8 @@
+#!/bin/bash
+source /opt/ct/ct-lib.sh; ct_espera
+id=$1; shift; val="$*"
+[[ ! "$id" =~ ^a[1-4]$ || -z "$val" ]] && { echo "Uso: ct-responder a1|a2|a3|a4 <valor>"; exit 1; }
+if [ "$(ct_sha "$val")" = "${CT_HASH[$id]}" ]; then ct_otorga $id; else
+  n=$(( $(cat $CT_STATE/intentos-$id 2>/dev/null || echo 0) + 1 )); echo $n > $CT_STATE/intentos-$id
+  echo -e "${R}✘ No es eso (intento $n).${N} Revisa el formato: a1 = nombre de equipo tal como sale en WorkstationName · a2 = usuario sin dominio · a3 = IPv4 · a4 = nombre de archivo con extensión."
+  [ $n -ge 3 ] && echo -e "${Y}Tres intentos: usa ct-pista $id. Si el inyecto siguiente ya llegó, ct-rescate A y sigue con el equipo.${N}"; fi
